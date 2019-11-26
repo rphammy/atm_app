@@ -1,3 +1,4 @@
+// WE LOVE GITHUB
 package cs174a;                         // THE BASE PACKAGE FOR YOUR APP MUST BE THIS ONE.  But you may add subpackages.
 
 // DO NOT REMOVE THIS IMPORT.
