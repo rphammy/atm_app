@@ -44,17 +44,15 @@ CREATE TABLE Transactions (
 );
 */
 
-/*
+
 CREATE TABLE TwoSided (
     aid INT NOT NULL,
-    aid2 INT NOT NULL,
     tid INT NOT NULL,
-    PRIMARY KEY (tid, aid, aid2),
+    PRIMARY KEY (aid,tid),
     FOREIGN KEY (aid) REFERENCES Accounts ON DELETE CASCADE,
-    FOREIGN KEY (aid2) REFERENCES Accounts,
     FOREIGN KEY (tid) REFERENCES Transactions
 );
-*/
+
 
 /*
 CREATE TABLE WriteCheck (
