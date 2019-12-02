@@ -65,6 +65,7 @@ CREATE TABLE WriteCheck (
 );
 */
 
+/*
 CREATE TABLE Pocket (
     aid INT,
     aid2 INT,
@@ -72,6 +73,10 @@ CREATE TABLE Pocket (
     FOREIGN KEY (aid) REFERENCES Accounts ON DELETE CASCADE,
     FOREIGN KEY (aid2) REFERENCES Accounts ON DELETE CASCADE
 );
+*/
+
+
+
 
 
     
