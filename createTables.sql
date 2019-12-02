@@ -25,10 +25,10 @@ CREATE TABLE Accounts (
 /*
 CREATE TABLE Owners (
     aid INTEGER NOT NULL,
-    tid INTEGER NOT NULL,
-    PRIMARY KEY (aid, tid),
+    taxid INTEGER NOT NULL,
+    PRIMARY KEY (aid, taxid),
     FOREIGN KEY (aid) REFERENCES Accounts ON DELETE CASCADE,
-    FOREIGN KEY (tid) REFERENCES Customers ON DELETE CASCADE
+    FOREIGN KEY (taxid) REFERENCES Customers ON DELETE CASCADE
 );
 */
 
