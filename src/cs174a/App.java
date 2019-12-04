@@ -17,8 +17,8 @@ import sun.nio.cs.ext.EUC_CN;
  */
 public class App implements Testable {
 	private OracleConnection _connection;                   // Example connection object to your DB.
-	Date sysDate;
-	String bankName = "Bank of Nuts";
+	private Date sysDate;
+	private String bankName = "Bank of Nuts";
 
 	/**
 	 * Default constructor.
@@ -226,19 +226,14 @@ public class App implements Testable {
 	 */
 	@Override
 	public String setDate(int year, int month, int day) {
-		String newDate = year + "-" + month + "-" + day
+		String newDate = year + "-" + month + "-" + day;
 		try {
 			sysDate = new Date(year, month, day);
-			return "0" + newDate;
+			return "0 " + newDate;
 		} catch (Exception e) {
 			System.err.println(e.getMessage());
-			return "1" + newDate;
+			return "1 " + newDate;
 		}
-	}
-
-	@Override
-	public String listClosedAccounts() {
-		return "0 it works!";
 	}
 
 	/**
@@ -261,33 +256,65 @@ public class App implements Testable {
 	@Override
 	public String createCheckingSavingsAccount(AccountType accountType, String id, double initialBalance, String tin, String name, String address) {
 		// check if customer exists
+		double interest=0.0;
 		Statement stmt;
+		ResultSet rs;
 		String customerLookupQuery = "SELECT * FROM Customers C WHERE C.taxid=" + tin;
+		if(accountType==Testable.AccountType.STUDENT_CHECKING || accountType== AccountType.INTEREST_CHECKING) {
+			interest=3.0;
+		} else if(accountType==AccountType.SAVINGS) {
+			interest=4.8;
+		}
 		String createAccountQuery = "INSERT INTO Accounts(atype,status,bankname,balance,interest,aid,taxid) VALUES"+
-									"('"+AccountType+"','open','"+bankName+"',"+initialBalance+""
+									"('"+accountType+"','open','"+bankName+"',"+initialBalance+","+interest+","+id+","+tin+")";
+		// create customer if customer does not exist
 		try {
 			stmt = _connection.createStatement();
-			ResultSet rs = stmt.executeQuery(customerLookupQuery);
+			rs = stmt.executeQuery(customerLookupQuery);
+			if (!rs.next()) {
+				createCustomer(id,tin,name,address);
+			}
 		} catch (SQLException e) {
 			System.err.println(e.getMessage());
 			return "1 " + id + " " + accountType + " " + initialBalance + " " + tin;
 		}
-		// customer does not exist
-		if (rs.next() == false) {
-			createCustomer(id,tin,name,address);
-			try {
-				stmt = _connection.createStatement();
-				stmt.executeUpdate(createAccountQuery);
-			}catch(SQLException e){
-				System.err.print(e.getMessage());
-				return "1 " + id + " " + accountType + " " + initialBalance + " " + tin;
-			}
-		// customer does exist
-		} else {
-
+		// create account
+		try {
+			stmt = _connection.createStatement();
+			stmt.executeUpdate(createAccountQuery);
+		}catch(SQLException e){
+			System.err.print(e.getMessage());
+			return "1 " + id + " " + accountType + " " + initialBalance + " " + tin;
 		}
-			//Read more: https://javarevisited.blogspot.com/2016/10/how-to-check-if-resultset-is-empty-in-Java-JDBC.html#ixzz676IBHOax
+		return "0"+ id + " " + accountType + " " + initialBalance + " " + tin;
+	}
 
-			return "0 " + id + " " + accountType + " " + initialBalance + " " + tin;
+	/**
+	 * Generate list of closed accounts.
+	 * @return a string "r id1 id2 ... idn", where
+	 *         r = 0 for success, 1 for error; and
+	 *         id1 id2 ... idn is a list of space-separated closed account IDs.
+	 */
+
+	@Override
+	public String listClosedAccounts() {
+		String query = "SELECT A.id " +
+				       "FROM Accounts A " +
+					   "WHERE A.status='closed'";
+		String ids = "";
+		Statement stmt;
+		ResultSet rs;
+		try {
+			stmt = _connection.createStatement();
+			rs = stmt.executeQuery(query);
+			while(rs.next()){
+				ids += " ";
+				ids += rs.getString("aid");
+			}
+			return "0"+ids;
+		} catch(SQLException e) {
+			System.err.print(e.getMessage());
+			return "1" + ids;
+		}
 	}
 }
