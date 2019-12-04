@@ -91,7 +91,7 @@ interface Testable
 	 * @param address New customer's address.
 	 * @return a string "r", where r = 0 for success, 1 for error.
 	 */
-//	String createCustomer( String accountId, String tin, String name, String address );
+	String createCustomer( String accountId, String tin, String name, String address );
 
 	/**
 	 * Deposit a given amount of dollars to an existing checking or savings account.

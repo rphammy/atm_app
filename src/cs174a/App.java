@@ -8,6 +8,7 @@ import java.sql.Statement;
 import java.util.Properties;
 import oracle.jdbc.pool.OracleDataSource;
 import oracle.jdbc.OracleConnection;
+import sun.nio.cs.ext.EUC_CN;
 
 /**
  * The most important class for your application.
@@ -107,25 +108,6 @@ public class App implements Testable
 	}
 
 	/**
-	 * Example of one of the testable functions.
-	 */
-	@Override
-	public String listClosedAccounts()
-	{
-		return "0 it works!";
-	}
-
-	/**
-	 * Another example.
-	 */
-	@Override
-	public String createCheckingSavingsAccount( AccountType accountType, String id, double initialBalance, String tin, String name, String address )
-	{
-		return "0 " + id + " " + accountType + " " + initialBalance + " " + tin;
-	}
-
-
-	/**
 	 * Create all of your tables in your DB.
 	 * @return a string "r", where r = 0 for success, 1 for error.
 	 */
@@ -133,64 +115,64 @@ public class App implements Testable
 	public String createTables() {
 		final String CREATE_CUSTOMERS=
 				"CREATE TABLE Customers ("
-				+"cname CHAR(100),"
-				+ "address CHAR(200),"
-				+ "pinKey CHAR(4),"
-				+ "taxid INT NOT NULL,"
-				+ "PRIMARY KEY (taxid))";
+						+"cname CHAR(100),"
+						+ "address CHAR(200),"
+						+ "pinKey CHAR(4),"
+						+ "taxid INT NOT NULL,"
+						+ "PRIMARY KEY (taxid))";
 
 		final String CREATE_ACCOUNTS=
 				"CREATE TABLE Accounts ("
-				+ "atype CHAR(50),"
-				+ "status CHAR(10),"
-				+ "bankname CHAR(50),"
-				+ "balance FLOAT,"
-				+ "interest FLOAT,"
-				+ "aid INT NOT NULL,"
-				+ "taxid INT NOT NULL,"
-				+ "PRIMARY KEY (aid),"
-				+ "FOREIGN KEY (taxid) REFERENCES Customers ON DELETE CASCADE)";
+						+ "atype CHAR(50),"
+						+ "status CHAR(10),"
+						+ "bankname CHAR(50),"
+						+ "balance FLOAT,"
+						+ "interest FLOAT,"
+						+ "aid INT NOT NULL,"
+						+ "taxid INT,"
+						+ "PRIMARY KEY (aid),"
+						+ "FOREIGN KEY (taxid) REFERENCES Customers ON DELETE CASCADE)";
 
 		final String CREATE_OWNERS=
 				"CREATE TABLE Owners ("
-				+ "aid INTEGER NOT NULL,"
-				+ "taxid INTEGER NOT NULL,"
-				+ "PRIMARY KEY (aid, taxid),"
-				+ "FOREIGN KEY (aid) REFERENCES Accounts ON DELETE CASCADE,"
-				+ "FOREIGN KEY (taxid) REFERENCES Customers ON DELETE CASCADE)";
+						+ "aid INTEGER NOT NULL,"
+						+ "taxid INTEGER NOT NULL,"
+						+ "PRIMARY KEY (aid, taxid),"
+						+ "FOREIGN KEY (aid) REFERENCES Accounts ON DELETE CASCADE,"
+						+ "FOREIGN KEY (taxid) REFERENCES Customers ON DELETE CASCADE)";
 
 		final String CREATE_TRANSACTIONS=
 				"CREATE TABLE Transactions ("
-				+ "ttype CHAR(50),"
-				+ "amount FLOAT,"
-				+ "tdate DATE,"
-				+ "tid INT,"
-				+ "aid INT,"
-				+ "PRIMARY KEY (tid),"
-				+ "FOREIGN KEY (aid) REFERENCES Accounts ON DELETE CASCADE)";
+						+ "ttype CHAR(50),"
+						+ "amount FLOAT,"
+						+ "tdate DATE,"
+						+ "tid INT,"
+						+ "aid INT,"
+						+ "PRIMARY KEY (tid),"
+						+ "FOREIGN KEY (aid) REFERENCES Accounts ON DELETE CASCADE)";
 
 		final String CREATE_TWOSIDED=
 				"CREATE TABLE TwoSided (" +
-				"aid INT NOT NULL," +
-				"tid INT NOT NULL," +
-				"PRIMARY KEY (aid,tid)," +
-				"FOREIGN KEY (aid) REFERENCES Accounts ON DELETE CASCADE," +
-				"FOREIGN KEY (tid) REFERENCES Transactions)";
+						"aid INT NOT NULL," +
+						"tid INT NOT NULL," +
+						"PRIMARY KEY (aid,tid)," +
+						"FOREIGN KEY (aid) REFERENCES Accounts ON DELETE CASCADE," +
+						"FOREIGN KEY (tid) REFERENCES Transactions)";
 
 		final String CREATE_WRITECHECK=
 				"CREATE TABLE WriteCheck ("
-				+ "checkno INT NOT NULL,"
-				+ "tid INT NOT NULL,"
-				+ "PRIMARY KEY (checkno),"
-				+ "FOREIGN KEY (tid) REFERENCES Transactions)";
+						+ "checkno INT NOT NULL,"
+						+ "tid INT NOT NULL,"
+						+ "PRIMARY KEY (checkno),"
+						+ "FOREIGN KEY (tid) REFERENCES Transactions)";
 
 		final String CREATE_POCKET=
 				"CREATE TABLE Pocket ("
-				+ "aid INT,"
-				+ "aid2 INT,"
-				+ "PRIMARY KEY (aid, aid2),"
-				+ "FOREIGN KEY (aid) REFERENCES Accounts ON DELETE CASCADE,"
-				+ "FOREIGN KEY (aid2) REFERENCES Accounts ON DELETE CASCADE)";
+						+ "aid INT,"
+						+ "aid2 INT,"
+						+ "PRIMARY KEY (aid, aid2),"
+						+ "FOREIGN KEY (aid) REFERENCES Accounts ON DELETE CASCADE,"
+						+ "FOREIGN KEY (aid2) REFERENCES Accounts ON DELETE CASCADE)";
 
 		try{
 			Statement stmnt = _connection.createStatement();
@@ -207,5 +189,56 @@ public class App implements Testable
 			System.err.println( e.getMessage() );
 			return "1";
 		}
+	}
+
+
+	/**
+	 * Create a new customer and link them to an existing checking or saving account.
+	 * @param accountId Existing checking or saving account.
+	 * @param tin New customer's Tax ID number.
+	 * @param name New customer's name.
+	 * @param address New customer's address.
+	 * @return a string "r", where r = 0 for success, 1 for error.
+	 */
+	@Override
+	public String createCustomer( String accountId, String tin, String name, String address ){
+		final String INSERT_CUSTOMER =
+				"INSERT INTO Customers(taxid, cname, address, pinkey)"
+				+ "\nVALUES("
+				+ Integer.parseInt(tin) + ","
+				+ "'" + name + "'" + ","
+				+ "'" + address + "'" + ","
+				+ "NULL)";
+
+		try{
+			//inset customer data
+			System.out.println(INSERT_CUSTOMER);
+			Statement stmnt = _connection.createStatement();
+
+			stmnt.executeUpdate(INSERT_CUSTOMER);
+			return "0";
+		}
+		catch(SQLException er) {
+			System.err.println(er.getMessage());
+			return "1";
+		}
+	}
+
+	/**
+	 * Example of one of the testable functions.
+	 */
+	@Override
+	public String listClosedAccounts()
+	{
+		return "0 it works!";
+	}
+
+	/**
+	 * Another example.
+	 */
+	@Override
+	public String createCheckingSavingsAccount( AccountType accountType, String id, double initialBalance, String tin, String name, String address )
+	{
+		return "0 " + id + " " + accountType + " " + initialBalance + " " + tin;
 	}
 }
