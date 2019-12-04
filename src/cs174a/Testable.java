@@ -122,7 +122,7 @@ interface Testable
 	 *         linkedNewBalance is the new balance of linked account, with up to 2 decimal places (e.g. with %.2f); and
 	 *         pocketNewBalance is the new balance of the pocket account.
 	 */
-//	String topUp( String accountId, double amount );
+	String topUp( String accountId, double amount );
 
 	/**
 	 * Move a specified amount of money from one pocket account to another pocket account.

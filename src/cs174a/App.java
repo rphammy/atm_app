@@ -11,6 +11,8 @@ import oracle.jdbc.pool.OracleDataSource;
 import oracle.jdbc.OracleConnection;
 import sun.nio.cs.ext.EUC_CN;
 
+import javax.xml.transform.Result;
+
 /**
  * The most important class for your application.
  * DO NOT CHANGE ITS SIGNATURE.
@@ -226,13 +228,106 @@ public class App implements Testable {
 	 */
 	@Override
 	public String setDate(int year, int month, int day) {
-		String newDate = year + "-" + month + "-" + day
+		String newDate = year + "-" + month + "-" + day;
 		try {
 			sysDate = new Date(year, month, day);
-			return "0" + newDate;
+			return "0 " + newDate;
 		} catch (Exception e) {
 			System.err.println(e.getMessage());
-			return "1" + newDate;
+			return "1 " + newDate;
+		}
+	}
+
+
+
+	/**
+	 * Move a specified amount of money from the linked checking/savings account to the pocket account.
+	 * @param accountId Pocket account ID.
+	 * @param amount Non-negative amount to top up.
+	 * @return a string "r linkedNewBalance pocketNewBalance", where
+	 *         r = 0 for success, 1 for error;
+	 *         linkedNewBalance is the new balance of linked account, with up to 2 decimal places (e.g. with %.2f); and
+	 *         pocketNewBalance is the new balance of the pocket account.
+	 */
+	@Override
+	public String topUp( String accountId, double amount ) {
+		Statement stmt = null;
+		final String LINKED_ACCOUNT_QUERY =
+				"SELECT aid2 "
+				+ "FROM Pocket "
+				+ " WHERE aid=" + accountId;
+
+		final String LINKED_BALANCE_QUERY =
+				"SELECT A.balance\n" +
+				"FROM accounts A\n" +
+				"WHERE A.aid = \n" +
+				"    (SELECT P.aid2\n" +
+				"    FROM pocket P\n" +
+				"    WHERE P.aid =" + accountId +
+				")\n";
+
+		final String POCKET_BALANCE_QUERY =
+				"SELECT A.balance\n" +
+						"FROM Accounts A\n" +
+						"WHERE A.aid = " + accountId;
+ 
+		final String LINKED_BALANCE_UPDATE;
+		final String POCKED_BALANCE_UPDATE;
+
+		double pocketBalance = 0;
+		double linkedBalance = 0;
+		double newPocketBalance = 0;
+		double newLinkedBalance = 0;
+
+
+
+
+		try {
+			//query for the corresponding linked account using pocket account in pocket table
+			stmt = _connection.createStatement();
+			int test = 0;
+			ResultSet r = stmt.executeQuery(LINKED_ACCOUNT_QUERY);
+			if(r.next() == false) {
+				System.out.print("sorry :(");
+			}
+			while(r.next()) {
+				System.out.println("hi");
+				test = r.getInt(1);
+				System.out.println("id: " + test);
+			}
+
+			ResultSet rs = stmt.executeQuery(POCKET_BALANCE_QUERY);
+			System.out.println(POCKET_BALANCE_QUERY);
+			while(rs.next()) {
+				pocketBalance = rs.getDouble("balance");
+				System.out.println("pocket balance: " + pocketBalance);
+			}
+
+			rs = stmt.executeQuery(LINKED_BALANCE_QUERY);
+			while(rs.next()) {
+				linkedBalance = rs.getDouble("balance");
+				System.out.print("linked balance: " + linkedBalance);
+			}
+
+
+			newPocketBalance = pocketBalance + amount;
+			newLinkedBalance = linkedBalance - amount;
+
+
+			//then update the corresponding balance for that checking/savings row in accounts table
+			String UPDATE_LINKED = "UPDATE Accounts " +
+					"SET balance = " + newLinkedBalance +
+					" WHERE aid = ";
+			String UPDATE_POCKET = "UPDATE Accounts " +
+					"SET balance = " + newLinkedBalance +
+					" WHERE aid = ";
+//			rs = stmt.executeUpdate();
+//			rs = stmt.executeUpdate(");
+
+
+			return "0 " + pocketBalance + linkedBalance;
+		} catch (SQLException e) {
+			return "1" + e;
 		}
 	}
 
@@ -258,36 +353,36 @@ public class App implements Testable {
 	 * balance is the account's initial balance with 2 decimal places (e.g. 1000.34, as with %.2f); and
 	 * tin is the Tax ID of account's primary owner.
 	 */
-	@Override
-	public String createCheckingSavingsAccount(AccountType accountType, String id, double initialBalance, String tin, String name, String address) {
-		// check if customer exists
-		Statement stmt;
-		String customerLookupQuery = "SELECT * FROM Customers C WHERE C.taxid=" + tin;
-		String createAccountQuery = "INSERT INTO Accounts(atype,status,bankname,balance,interest,aid,taxid) VALUES"+
-									"('"+AccountType+"','open','"+bankName+"',"+initialBalance+""
-		try {
-			stmt = _connection.createStatement();
-			ResultSet rs = stmt.executeQuery(customerLookupQuery);
-		} catch (SQLException e) {
-			System.err.println(e.getMessage());
-			return "1 " + id + " " + accountType + " " + initialBalance + " " + tin;
-		}
-		// customer does not exist
-		if (rs.next() == false) {
-			createCustomer(id,tin,name,address);
-			try {
-				stmt = _connection.createStatement();
-				stmt.executeUpdate(createAccountQuery);
-			}catch(SQLException e){
-				System.err.print(e.getMessage());
-				return "1 " + id + " " + accountType + " " + initialBalance + " " + tin;
-			}
-		// customer does exist
-		} else {
-
-		}
-			//Read more: https://javarevisited.blogspot.com/2016/10/how-to-check-if-resultset-is-empty-in-Java-JDBC.html#ixzz676IBHOax
-
-			return "0 " + id + " " + accountType + " " + initialBalance + " " + tin;
-	}
+//	@Override
+//	public String createCheckingSavingsAccount(AccountType accountType, String id, double initialBalance, String tin, String name, String address) {
+//		// check if customer exists
+//		Statement stmt;
+//		String customerLookupQuery = "SELECT * FROM Customers C WHERE C.taxid=" + tin;
+//		String createAccountQuery = "INSERT INTO Accounts(atype,status,bankname,balance,interest,aid,taxid) VALUES"+
+//									"('"+AccountType+"','open','"+bankName+"',"+initialBalance+""
+//		try {
+//			stmt = _connection.createStatement();
+//			ResultSet rs = stmt.executeQuery(customerLookupQuery);
+//		} catch (SQLException e) {
+//			System.err.println(e.getMessage());
+//			return "1 " + id + " " + accountType + " " + initialBalance + " " + tin;
+//		}
+//		// customer does not exist
+//		if (rs.next() == false) {
+//			createCustomer(id,tin,name,address);
+//			try {
+//				stmt = _connection.createStatement();
+//				stmt.executeUpdate(createAccountQuery);
+//			}catch(SQLException e){
+//				System.err.print(e.getMessage());
+//				return "1 " + id + " " + accountType + " " + initialBalance + " " + tin;
+//			}
+//		// customer does exist
+//		} else {
+//
+//		}
+//			//Read more: https://javarevisited.blogspot.com/2016/10/how-to-check-if-resultset-is-empty-in-Java-JDBC.html#ixzz676IBHOax
+//
+//			return "0 " + id + " " + accountType + " " + initialBalance + " " + tin;
+//	}
 }

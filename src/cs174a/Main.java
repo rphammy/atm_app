@@ -33,14 +33,11 @@ public class Main
 			System.out.println( r );
 
 			// Another example test.
-			r = app.createCheckingSavingsAccount( AccountType.INTEREST_CHECKING, "account1", 1234.56, "theTaxID", "Im YoungMing", "Known" );
-			System.out.println( r );
 
 			// Our tests
-            r = app.dropTables();
+            r = app.topUp("53027", 10.0);
+            System.out.println(r);
 
-			r = app.createTables();
-			System.out.println( r );
 		}
 	}
 	//!### FINALIZAMOS
