@@ -37,7 +37,8 @@ VALUES ('Pocket','open','Isla Vista',0,0,43947,212116070);
 INSERT INTO Accounts(atype,status,bankname,balance,interest,aid,taxid)
 VALUES ('Pocket','open','Santa Cruz',0,0,60413,400651982);
 
-INSERT INTO Accounts(atype,status,bankname,balance,interest,aid,taxid)VALUES ('Pocket','open','Santa Barbara',0,0,67521,401605312);
+INSERT INTO Accounts(atype,status,bankname,balance,interest,aid,taxid)
+VALUES ('Pocket','open','Santa Barbara',0,0,67521,401605312);
 
 
 
