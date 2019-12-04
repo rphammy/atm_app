@@ -10,6 +10,8 @@ import java.util.Properties;
 import oracle.jdbc.pool.OracleDataSource;
 import oracle.jdbc.OracleConnection;
 import sun.nio.cs.ext.EUC_CN;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 
 /**
  * The most important class for your application.
@@ -18,7 +20,8 @@ import sun.nio.cs.ext.EUC_CN;
 public class App implements Testable {
 	private OracleConnection _connection;                   // Example connection object to your DB.
 	private Date sysDate;
-	private String bankName = "Bank of Nuts";
+	private String bankName;
+	private int transactionId;
 
 	/**
 	 * Default constructor.
@@ -26,6 +29,8 @@ public class App implements Testable {
 	 */
 	App() {
 		sysDate = new Date(2011, 3, 1);
+		transactionId=0;
+		bankName="bank of Nuts";
 	}
 
 	/**
@@ -203,7 +208,7 @@ public class App implements Testable {
 				+ "NULL)";
 
 		try{
-			//inset customer data
+			//insert customer data
 			System.out.println(INSERT_CUSTOMER);
 			Statement stmnt = _connection.createStatement();
 
@@ -290,15 +295,100 @@ public class App implements Testable {
 	}
 
 	/**
+	 * Move a specified amount of money from one pocket account to another pocket account.
+	 * @param from Source pocket account ID.
+	 * @param to Destination pocket account ID.
+	 * @param amount Non-negative amount to pay.
+	 * @return a string "r fromNewBalance toNewBalance", where
+	 *         r = 0 for success, 1 for error.
+	 *         fromNewBalance is the new balance of the source pocket account, with up to 2 decimal places (e.g. with %.2f); and
+	 *         toNewBalance is the new balance of destination pocket account, with up to 2 decimal places.
+	 */
+	@Override
+	public String payFriend( String from, String to, double amount ) {
+		// check that from, to are pocket accounts
+		String fromQuery = "SELECT A.atype FROM Accounts A WHERE A.aid="+from;
+		String toQuery = "SELECT A.atype FROM Accounts A WHERE A.aid="+to;
+		String firstTransaction = "SELECT * FROM Transaction T WHERE T.aid="+from;
+		double fromNewBalance=0;
+		double toNewBalance=0;
+		Statement stmt;
+		ResultSet rs;
+		try{
+			// check that both accounts are pocket accounts
+			stmt=_connection.createStatement();
+			rs = stmt.executeQuery(fromQuery);
+			if(!rs.next() || rs.getString("atype")!="POCKET") {
+				System.out.print("Error: both accounts must be existing Pocket accounts");
+				return "1 "+fromNewBalance+" "+toNewBalance;
+			}
+			rs = stmt.executeQuery(toQuery);
+			if(!rs.next() || rs.getString("atype")!="POCKET") {
+				System.out.print("Error: both accounts must be existing Pocket accounts");
+				return "1 "+fromNewBalance+" "+toNewBalance;
+			}
+			// the first transaction of the month incurs a $5 fee
+			rs = stmt.executeQuery(firstTransaction);
+			if(!rs.next()) {
+				amount = amount-5.0;
+			}
+			// create Transaction
+			int fromId = 0;
+			int toId = 0;
+			createTransaction("pocket", amount, from, to);
+		}catch(SQLException e) {
+			System.err.print(e.getMessage());
+			return "1 "+fromNewBalance+" "+toNewBalance;
+		}
+		return "0";
+	}
+
+	/**
+	 * Add transaction to db
+	 * @param ttype type of transaction
+	 * @param amount dollar amount
+	 * @param aid account id initiating transaction
+	 * @param aid2 for two sided transactions, "-1" otherwise
+	 * @return a string "r", where r=0 for success, 1 for error
+	 */
+	@Override
+	public String createTransaction(String ttype, double amount, String aid,String aid2) {
+		SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd");
+		String currentDate = formatter.format(java.time.LocalDate.now()));
+		String transactionQuery = "INSERT INTO Transactions(ttype, amount,tdate,tid,aid) VALUES ("
+									+ ttype + ","
+									+ amount + ","
+									+ ",DATE '" + currentDate + "',"
+									+ transactionId + ","
+								    + aid + ")";
+		Statement stmt;
+		try {
+			stmt = _connection.createStatement();
+			stmt.executeQuery(transactionQuery);
+			if(aid2!="-1") {
+				String twoSidedQuery = "INSERT INTO TwoSided(aid, tid) VALUES ("
+						+ aid2 + ","
+						+ transactionId + ")";
+
+				stmt.executeQuery(twoSidedQuery);
+			}
+			transactionId++;
+			return "0";
+		}catch(SQLException e){
+			System.err.print(e.getMessage());
+			return "1";
+		}
+	}
+
+	/**
 	 * Generate list of closed accounts.
 	 * @return a string "r id1 id2 ... idn", where
 	 *         r = 0 for success, 1 for error; and
 	 *         id1 id2 ... idn is a list of space-separated closed account IDs.
 	 */
-
 	@Override
 	public String listClosedAccounts() {
-		String query = "SELECT A.id " +
+		String query = "SELECT A.aid " +
 				       "FROM Accounts A " +
 					   "WHERE A.status='closed'";
 		String ids = "";
@@ -311,10 +401,11 @@ public class App implements Testable {
 				ids += " ";
 				ids += rs.getString("aid");
 			}
-			return "0"+ids;
+			return "0" + ids;
 		} catch(SQLException e) {
 			System.err.print(e.getMessage());
 			return "1" + ids;
 		}
 	}
+
 }
