@@ -16,7 +16,7 @@ VALUES('deposit',2000000,DATE '2011-03-01',5,93156);
 INSERT INTO Transactions(ttype, amount, tdate, tid, aid) 
 VALUES('top-up',50,DATE '2011-03-01',6,53027);
 
-INSERT INTO Transactions(aid,tid) 
+INSERT INTO TwoSided(aid,tid) 
 VALUES(12121,6);
 
 INSERT INTO Transactions(ttype, amount, tdate, tid, aid)
@@ -29,10 +29,11 @@ INSERT INTO Transactions(ttype, amount, tdate, tid, aid)
 VALUES('deposit',2300,DATE '2011-03-01',9,19023);
 
 INSERT INTO Transactions(ttype, amount, tdate, tid, aid) VALUES
-('top-up',20,DATE '2011,03-01',10,60413);
+('top-up',20,DATE '2011-03-01',10,60413);
 
-Insert Into Twosided(Aid, Tid) 
+Insert Into TwoSided(aid, tid) 
 Values(43942,10);
+
 INSERT INTO Transactions(ttype, amount, tdate, tid, aid) 
 VALUES('deposit',1000,DATE '2011-03-01',11,32156);
 
