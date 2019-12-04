@@ -16,7 +16,7 @@ CREATE TABLE Accounts (
     balance FLOAT,
     interest FLOAT,
     aid INT NOT NULL, 
-    taxid INT NOT NULL,
+    taxid INT,
     PRIMARY KEY (aid),
     FOREIGN KEY (taxid) REFERENCES Customers ON DELETE CASCADE
 );
