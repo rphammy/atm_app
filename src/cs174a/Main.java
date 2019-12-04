@@ -38,6 +38,14 @@ public class Main
             r = app.topUp("53027", 10.0);
             System.out.println(r);
 
+
+			r = app.createCheckingSavingsAccount( AccountType.INTEREST_CHECKING, "34567", 1234.56, "1928304", "Im YoungMing", "Known" );
+			System.out.println( r );
+
+			// Our tests
+			app.createCheckingSavingsAccount(AccountType.SAVINGS, "12345", 1500,"123456789","sasha","6835 Pasado Rd");
+			System.out.println( r );
+
 		}
 	}
 	//!### FINALIZAMOS
