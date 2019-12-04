@@ -48,7 +48,7 @@ interface Testable
 	 * @param day Valid day, from 1 to 31, depending on the month (and if it's a leap year).
 	 * @return a string "r yyyy-mm-dd", where r = 0 for success, 1 for error; and yyyy-mm-dd is the new system's date, e.g. 2012-09-16.
 	 */
-//	String setDate( int year, int month, int day );
+	String setDate( int year, int month, int day );
 
 	/**
 	 * Create a new checking or savings account.

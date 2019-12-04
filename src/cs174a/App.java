@@ -5,6 +5,7 @@ import java.sql.DatabaseMetaData;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.Date;
 import java.util.Properties;
 import oracle.jdbc.pool.OracleDataSource;
 import oracle.jdbc.OracleConnection;
@@ -14,36 +15,31 @@ import sun.nio.cs.ext.EUC_CN;
  * The most important class for your application.
  * DO NOT CHANGE ITS SIGNATURE.
  */
-public class App implements Testable
-{
+public class App implements Testable {
 	private OracleConnection _connection;                   // Example connection object to your DB.
+	Date sysDate;
+	String bankName = "Bank of Nuts";
 
 	/**
 	 * Default constructor.
 	 * DO NOT REMOVE.
 	 */
-	App()
-	{
-		// TODO: Any actions you need.
+	App() {
+		sysDate = new Date(2011, 3, 1);
 	}
 
 	/**
 	 * This is an example access operation to the DB.
 	 */
-	void exampleAccessToDB()
-	{
+	void exampleAccessToDB() {
 		// Statement and ResultSet are AutoCloseable and closed automatically.
-		try( Statement statement = _connection.createStatement() )
-		{
-			try( ResultSet resultSet = statement.executeQuery( "select owner, table_name from all_tables" ) )
-			{
-				while( resultSet.next() )
-					System.out.println( resultSet.getString( 1 ) + " " + resultSet.getString( 2 ) + " " );
+		try (Statement statement = _connection.createStatement()) {
+			try (ResultSet resultSet = statement.executeQuery("select owner, table_name from all_tables")) {
+				while (resultSet.next())
+					System.out.println(resultSet.getString(1) + " " + resultSet.getString(2) + " ");
 			}
-		}
-		catch( SQLException e )
-		{
-			System.err.println( e.getMessage() );
+		} catch (SQLException e) {
+			System.err.println(e.getMessage());
 		}
 	}
 
@@ -51,8 +47,7 @@ public class App implements Testable
 	// Check the Testable.java interface for the function signatures and descriptions.
 
 	@Override
-	public String initializeSystem()
-	{
+	public String initializeSystem() {
 		// Some constants to connect to your DB.
 		final String DB_URL = "jdbc:oracle:thin:@cs174a.cs.ucsb.edu:1521/orcl";
 		final String DB_USER = "c##romanova";
@@ -60,41 +55,38 @@ public class App implements Testable
 
 		// Initialize your system.  Probably setting up the DB connection.
 		Properties info = new Properties();
-		info.put( OracleConnection.CONNECTION_PROPERTY_USER_NAME, DB_USER );
-		info.put( OracleConnection.CONNECTION_PROPERTY_PASSWORD, DB_PASSWORD );
-		info.put( OracleConnection.CONNECTION_PROPERTY_DEFAULT_ROW_PREFETCH, "20" );
+		info.put(OracleConnection.CONNECTION_PROPERTY_USER_NAME, DB_USER);
+		info.put(OracleConnection.CONNECTION_PROPERTY_PASSWORD, DB_PASSWORD);
+		info.put(OracleConnection.CONNECTION_PROPERTY_DEFAULT_ROW_PREFETCH, "20");
 
-		try
-		{
+		try {
 			OracleDataSource ods = new OracleDataSource();
-			ods.setURL( DB_URL );
-			ods.setConnectionProperties( info );
+			ods.setURL(DB_URL);
+			ods.setConnectionProperties(info);
 			_connection = (OracleConnection) ods.getConnection();
 
 			// Get the JDBC driver name and version.
 			DatabaseMetaData dbmd = _connection.getMetaData();
-			System.out.println( "Driver Name: " + dbmd.getDriverName() );
-			System.out.println( "Driver Version: " + dbmd.getDriverVersion() );
+			System.out.println("Driver Name: " + dbmd.getDriverName());
+			System.out.println("Driver Version: " + dbmd.getDriverVersion());
 
 			// Print some connection properties.
-			System.out.println( "Default Row Prefetch Value is: " + _connection.getDefaultRowPrefetch() );
-			System.out.println( "Database Username is: " + _connection.getUserName() );
+			System.out.println("Default Row Prefetch Value is: " + _connection.getDefaultRowPrefetch());
+			System.out.println("Database Username is: " + _connection.getUserName());
 			System.out.println();
 
 			return "0";
-		}
-		catch( SQLException e )
-		{
-			System.err.println( e.getMessage() );
+		} catch (SQLException e) {
+			System.err.println(e.getMessage());
 			return "1";
 		}
 	}
 
 	@Override
 	public String dropTables() {
-		Statement stmt = null;
-		try{
-			String[] dropStatements = new String[]{"DROP TABLE Pocket","DROP TABLE TwoSided","DROP TABLE Owners","DROP TABLE WriteCheck","DROP TABLE Transactions","DROP TABLE Accounts","DROP TABLE Customers"};
+		Statement stmt;
+		try {
+			String[] dropStatements = new String[]{"DROP TABLE Pocket", "DROP TABLE TwoSided", "DROP TABLE Owners", "DROP TABLE WriteCheck", "DROP TABLE Transactions", "DROP TABLE Accounts", "DROP TABLE Customers"};
 			for (String dropStatement : dropStatements) {
 				stmt = _connection.createStatement();
 				stmt.executeUpdate(dropStatement);
@@ -225,20 +217,77 @@ public class App implements Testable
 	}
 
 	/**
-	 * Example of one of the testable functions.
+	 * Set system's date.
+	 *
+	 * @param year  Valid 4-digit year, e.g. 2019.
+	 * @param month Valid month, where 1: January, ..., 12: December.
+	 * @param day   Valid day, from 1 to 31, depending on the month (and if it's a leap year).
+	 * @return a string "r yyyy-mm-dd", where r = 0 for success, 1 for error; and yyyy-mm-dd is the new system's date, e.g. 2012-09-16.
 	 */
 	@Override
-	public String listClosedAccounts()
-	{
+	public String setDate(int year, int month, int day) {
+		String newDate = year + "-" + month + "-" + day
+		try {
+			sysDate = new Date(year, month, day);
+			return "0" + newDate;
+		} catch (Exception e) {
+			System.err.println(e.getMessage());
+			return "1" + newDate;
+		}
+	}
+
+	@Override
+	public String listClosedAccounts() {
 		return "0 it works!";
 	}
 
 	/**
-	 * Another example.
+	 * Create a new checking or savings account.
+	 * If customer is new, then their name and address should be provided.
+	 *
+	 * @param accountType    New account's checking or savings type.
+	 * @param id             New account's ID.
+	 * @param initialBalance Initial account balance.
+	 * @param tin            Account's owner Tax ID number - it may belong to an existing or new customer.
+	 * @param name           [Optional] If customer is new, this is the customer's name.
+	 * @param address        [Optional] If customer is new, this is the customer's address.
+	 * @return a string "r aid type balance tin", where
+	 * r = 0 for success, 1 for error;
+	 * aid is the new account id;
+	 * type is the new account's type (see the enum codes above, e.g. INTEREST_CHECKING);
+	 * balance is the account's initial balance with 2 decimal places (e.g. 1000.34, as with %.2f); and
+	 * tin is the Tax ID of account's primary owner.
 	 */
 	@Override
-	public String createCheckingSavingsAccount( AccountType accountType, String id, double initialBalance, String tin, String name, String address )
-	{
-		return "0 " + id + " " + accountType + " " + initialBalance + " " + tin;
+	public String createCheckingSavingsAccount(AccountType accountType, String id, double initialBalance, String tin, String name, String address) {
+		// check if customer exists
+		Statement stmt;
+		String customerLookupQuery = "SELECT * FROM Customers C WHERE C.taxid=" + tin;
+		String createAccountQuery = "INSERT INTO Accounts(atype,status,bankname,balance,interest,aid,taxid) VALUES"+
+									"('"+AccountType+"','open','"+bankName+"',"+initialBalance+""
+		try {
+			stmt = _connection.createStatement();
+			ResultSet rs = stmt.executeQuery(customerLookupQuery);
+		} catch (SQLException e) {
+			System.err.println(e.getMessage());
+			return "1 " + id + " " + accountType + " " + initialBalance + " " + tin;
+		}
+		// customer does not exist
+		if (rs.next() == false) {
+			createCustomer(id,tin,name,address);
+			try {
+				stmt = _connection.createStatement();
+				stmt.executeUpdate(createAccountQuery);
+			}catch(SQLException e){
+				System.err.print(e.getMessage());
+				return "1 " + id + " " + accountType + " " + initialBalance + " " + tin;
+			}
+		// customer does exist
+		} else {
+
+		}
+			//Read more: https://javarevisited.blogspot.com/2016/10/how-to-check-if-resultset-is-empty-in-Java-JDBC.html#ixzz676IBHOax
+
+			return "0 " + id + " " + accountType + " " + initialBalance + " " + tin;
 	}
 }
