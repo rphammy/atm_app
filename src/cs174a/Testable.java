@@ -33,13 +33,13 @@ interface Testable
 	 * Destroy all of the tables in your DB.
 	 * @return a string "r", where r = 0 for success, 1 for error.
 	 */
-//	String dropTables();
+	String dropTables();
 
 	/**
 	 * Create all of your tables in your DB.
 	 * @return a string "r", where r = 0 for success, 1 for error.
 	 */
-//	String createTables();
+	//String createTables();
 
 	/**
 	 * Set system's date.

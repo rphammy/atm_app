@@ -89,6 +89,23 @@ public class App implements Testable
 		}
 	}
 
+	@Override
+	public String dropTables() {
+		Statement stmt = null;
+		try{
+			String[] dropStatements = new String[]{"DROP TABLE Pocket","DROP TABLE TwoSided","DROP TABLE Owners","DROP TABLE WriteCheck","DROP TABLE Transactions","DROP TABLE Accounts","DROP TABLE Customers"};
+			for (String dropStatement : dropStatements) {
+				stmt = _connection.createStatement();
+				stmt.executeUpdate(dropStatement);
+				// System.out.print("dropping table...");
+			}
+			return "0";
+		}catch(SQLException er) {
+			System.err.println(er.getMessage());
+			return "1";
+		}
+	}
+
 	/**
 	 * Example of one of the testable functions.
 	 */
