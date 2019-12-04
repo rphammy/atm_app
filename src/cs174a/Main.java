@@ -38,6 +38,9 @@ public class Main
 
 			// Our tests
             r = app.dropTables();
+
+			r = app.createTables();
+			System.out.println( r );
 		}
 	}
 	//!### FINALIZAMOS
