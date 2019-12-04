@@ -134,7 +134,7 @@ interface Testable
 	 *         fromNewBalance is the new balance of the source pocket account, with up to 2 decimal places (e.g. with %.2f); and
 	 *         toNewBalance is the new balance of destination pocket account, with up to 2 decimal places.
 	 */
-//	String payFriend( String from, String to, double amount );
+     String payFriend( String from, String to, double amount );
 
 	/**
 	 * Generate list of closed accounts.
@@ -143,4 +143,14 @@ interface Testable
 	 *         id1 id2 ... idn is a list of space-separated closed account IDs.
 	 */
 	String listClosedAccounts();
+
+	/**
+	 * Add transaction to db
+	 * @param ttype type of transaction
+	 * @param amount dollar amount
+	 * @param aid account id initiating transaction
+	 * @param aid2 aid2 for two sided transactions, "-1" otherwise
+	 * @return a string "r", where r=0 for success, 1 for error
+	 */
+	String createTransaction(String ttype,double amount,String aid,String aid2);
 }
