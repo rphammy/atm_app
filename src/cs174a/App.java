@@ -411,8 +411,7 @@ public class App implements Testable {
 		Statement stmt;
 		String oldBalance = getAccountBalance(accountId);
 		String newBalance = getAccountBalance(accountId);
-		String r;
-		r=editAccountBalance(accountId, amount);
+		String r=editAccountBalance(accountId, amount);
 		if(r=="1") return "1 "+oldBalance+" "+newBalance;
 		createTransaction("deposit",amount,accountId,"-1");
 		newBalance = getAccountBalance(accountId);
@@ -552,6 +551,36 @@ public class App implements Testable {
 			return "1" + ids;
 		}
 	}
+
+	@Override
+	/**
+	 * Subtract to the checking or savings account balance
+	 * @return a string r = "0" for success, "1" for error
+	 */
+	public String withdrawal(String aid, double amount) {
+		if(getAccountType(aid)=="POCKET" || getAccountType(aid)=="1") {
+			return "1";
+		}
+		editAccountBalance(aid, amount*-1);
+		createTransaction("withdrawal",amount*-1,aid,"-1");
+		return "0";
+	}
+
+	/**
+	 * Subtract money from the pocket account balance
+	 * @return a string r="0" for success, "1" for error
+	 */
+	@Override
+	public String purchase(String aid, double amount) {
+		String t = getAccountType(aid);
+		if(t!="POCKET") return "1";
+		editAccountBalance(aid,amount*-1);
+		createTransaction("purchase",amount*-1,aid,"-1");
+		return "0";
+	}
+
+	//@Override
+	//public String
 
 
 	/**
