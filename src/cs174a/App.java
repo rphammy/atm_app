@@ -420,6 +420,23 @@ public class App implements Testable {
 	}
 
 	/**
+	 * Show an account balance (regardless of type of account).
+	 * @param accountId Account ID.
+	 * @return a string "r balance", where
+	 *         r = 0 for success, 1 for error; and
+	 *         balance is the account balance, with up to 2 decimal places (e.g. with %.2f).
+	 */
+	@Override
+	public String showBalance( String accountId ) {
+		String balance = getAccountBalance(accountId);
+		if(balance=="1") {
+			return "1 err";
+		} else {
+			return "0 "+balance;
+		}
+	}
+
+	/**
 	 * Move a specified amount of money from one pocket account to another pocket account.
 	 * @param from Source pocket account ID.
 	 * @param to Destination pocket account ID.
@@ -585,7 +602,7 @@ public class App implements Testable {
 	/**
 	 * Get current balance of account
 	 * @param aid account id
-	 * @return account balance as a string, or "-1" for error
+	 * @return account balance as a string, or "1" for error
 	 */
 	@Override
 	public String getAccountBalance(String aid) {
@@ -600,7 +617,7 @@ public class App implements Testable {
 			return(Double.toString(balance));
 		} catch(SQLException e) {
 			System.err.print(e.getMessage());
-			return "-1";
+			return "1";
 		}
 	}
 

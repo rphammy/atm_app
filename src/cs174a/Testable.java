@@ -111,7 +111,7 @@ interface Testable
 	 *         r = 0 for success, 1 for error; and
 	 *         balance is the account balance, with up to 2 decimal places (e.g. with %.2f).
 	 */
-	//String showBalance( String accountId );
+	String showBalance( String accountId );
 
 	/**
 	 * Move a specified amount of money from the linked checking/savings account to the pocket account.
