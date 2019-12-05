@@ -354,7 +354,6 @@ public class App implements Testable {
 	 * balance is the account's initial balance with 2 decimal places (e.g. 1000.34, as with %.2f); and
 	 * tin is the Tax ID of account's primary owner.
 	 */
-
 	@Override
 	public String createCheckingSavingsAccount(AccountType accountType, String id, double initialBalance, String tin, String name, String address) {
 		// check if customer exists
@@ -389,6 +388,22 @@ public class App implements Testable {
 			return "1 " + id + " " + accountType + " " + initialBalance + " " + tin;
 		}
 		return "0"+ id + " " + accountType + " " + initialBalance + " " + tin;
+	}
+
+	/**
+	 * Deposit a given amount of dollars to an existing checking or savings account.
+	 * @param accountId Account ID.
+	 * @param amount Non-negative amount to deposit.
+	 * @return a string "r old new" where
+	 *         r = 0 for success, 1 for error;
+	 *         old is the old account balance, with up to 2 decimal places (e.g. 1000.12, as with %.2f); and
+	 *         new is the new account balance, with up to 2 decimal places.
+	 */
+	@Override
+	public String deposit( String accountId, double amount ) {
+		int oldBalance=0; int newBalance=0;
+		return "0 "+oldBalance+" "+newBalance;
+
 	}
 
 	/**
@@ -437,11 +452,12 @@ public class App implements Testable {
 			System.err.print(e.getMessage());
 			return "1 "+fromNewBalance+" "+toNewBalance;
 		}
-		return "0";
+		// edit account balances
+		return "0 "+fromNewBalance+" "+toNewBalance;
 	}
 
 	/**
-	 * Add transaction to db
+	 * Add Transactions entry and TwoSided entry (if needed) to db
 	 * @param ttype type of transaction
 	 * @param amount dollar amount
 	 * @param aid account id initiating transaction
@@ -451,7 +467,7 @@ public class App implements Testable {
 	@Override
 	public String createTransaction(String ttype, double amount, String aid,String aid2) {
 		SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd");
-		String currentDate = formatter.format(java.time.LocalDate.now()));
+		String currentDate = formatter.format(java.time.LocalDate.now());
 		String transactionQuery = "INSERT INTO Transactions(ttype, amount,tdate,tid,aid) VALUES ("
 									+ ttype + ","
 									+ amount + ","
@@ -503,5 +519,50 @@ public class App implements Testable {
 			System.err.print(e.getMessage());
 			return "1" + ids;
 		}
+	}
+
+	/**
+	 * Add or subtract a given amount from account balance
+	 * close account if balance <=.01 but >0
+	 * fail if balance <0 after transaction
+	 * @param aid account id
+	 * @param amount negative to subtract, positive to add
+	 * @return a string "r", where r=0 for success, 1 for error, -1 for failed transaction
+	 */
+	@Override
+	public String editAccountBalance(int aid,float amount) {
+		Statement stmt;
+		ResultSet rs;
+		String findAccountQuery = "SELECT A.balance FROM Accounts A WHERE A.aid="+aid;
+		String updateAccount = "";
+		double balance = 0.0;
+		// find account
+		try {
+			stmt=_connection.createStatement();
+			rs = stmt.executeQuery(findAccountQuery);
+			balance = rs.getInt("balance");
+			balance += amount;
+			if(balance<0) {
+				return "-1";
+			}
+			// close account, update balance
+			if(balance<=.01) {
+				updateAccount = "UPDATE Accounts " +
+						"SET balance = " + balance +
+						", status = 'closed'" +
+						" WHERE aid = "+aid;
+				stmt.executeUpdate(updateAccount);
+			}
+			if(balance>.01) {
+				updateAccount = "UPDATE Accounts "+
+							"Set balance = "+ balance +
+							" WHERE aid = "+aid;
+				stmt.executeUpdate(updateAccount);
+			}
+		} catch(SQLException e) {
+			System.err.print(e.getMessage());
+			return "1";
+		}
+		return "0";
 	}
 }
