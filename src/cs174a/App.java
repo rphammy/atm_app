@@ -401,9 +401,15 @@ public class App implements Testable {
 	 */
 	@Override
 	public String deposit( String accountId, double amount ) {
-		int oldBalance=0; int newBalance=0;
+		// DO WE NEED TO CHECK ACCOUNT TYPE?
+		Statement stmt;
+		String oldBalance;
+		String newBalance;
+		oldBalance = getAccountBalance(accountId);
+		editAccountBalance(accountId, amount);
+		createTransaction("deposit",amount,accountId,"-1");
+		newBalance = getAccountBalance(accountId);
 		return "0 "+oldBalance+" "+newBalance;
-
 	}
 
 	/**
@@ -529,7 +535,7 @@ public class App implements Testable {
 	 * fail if balance <0 after transaction
 	 * @param aid account id
 	 * @param amount negative to subtract, positive to add
-	 * @return a string "r", where r=0 for success, 1 for error, -1 for failed transaction
+	 * @return a string "r", where r=0 if success, 1 for error, -1 for failed transaction
 	 */
 	@Override
 	public String editAccountBalance(String aid,double amount) {
@@ -567,4 +573,33 @@ public class App implements Testable {
 		}
 		return "0";
 	}
+
+	/**
+	 * Get current balance of account
+	 * @param aid account id
+	 * @return account balance as a string, or "-1" for error
+	 */
+	@Override
+	public String getAccountBalance(String aid) {
+		Statement stmt;
+		ResultSet rs;
+		String getBalance = "SELECT A.balance FROM Accounts A WHERE A.aid="+aid;
+		double balance = 0.0;
+		try {
+			stmt = _connection.createStatement();
+			rs = stmt.executeQuery(getBalance);
+			balance = rs.getInt("balance");
+			return(Double.toString(balance));
+		} catch(SQLException e) {
+			System.err.print(e.getMessage());
+			return "-1";
+		}
+	}
+
+	// HELPER FUNCTION TO CHECK IF TRANSACTION ARE LEGAL?
+	@Override
+	public String checkAccountType(Testable.AccountType aType) {
+		return "0";
+	}
+
 }
