@@ -401,9 +401,39 @@ public class App implements Testable {
 	 */
 	@Override
 	public String deposit( String accountId, double amount ) {
-		int oldBalance=0; int newBalance=0;
+		String t = getAccountType(accountId);
+		// check account type
+		if(t=="POCKET") {
+			System.out.print("Transaction not valid on Pocket account");
+			return "1";
+		}
+		// perform deposit
+		Statement stmt;
+		String oldBalance = getAccountBalance(accountId);
+		String newBalance = getAccountBalance(accountId);
+		String r;
+		r=editAccountBalance(accountId, amount);
+		if(r=="1") return "1 "+oldBalance+" "+newBalance;
+		createTransaction("deposit",amount,accountId,"-1");
+		newBalance = getAccountBalance(accountId);
 		return "0 "+oldBalance+" "+newBalance;
+	}
 
+	/**
+	 * Show an account balance (regardless of type of account).
+	 * @param accountId Account ID.
+	 * @return a string "r balance", where
+	 *         r = 0 for success, 1 for error; and
+	 *         balance is the account balance, with up to 2 decimal places (e.g. with %.2f).
+	 */
+	@Override
+	public String showBalance( String accountId ) {
+		String balance = getAccountBalance(accountId);
+		if(balance=="1") {
+			return "1 err";
+		} else {
+			return "0 "+balance;
+		}
 	}
 
 	/**
@@ -422,8 +452,8 @@ public class App implements Testable {
 		String fromQuery = "SELECT A.atype FROM Accounts A WHERE A.aid="+from;
 		String toQuery = "SELECT A.atype FROM Accounts A WHERE A.aid="+to;
 		String firstTransaction = "SELECT * FROM Transaction T WHERE T.aid="+from;
-		double fromNewBalance=0;
-		double toNewBalance=0;
+		String fromNewBalance=getAccountBalance(from);
+		String toNewBalance=getAccountBalance(to);
 		Statement stmt;
 		ResultSet rs;
 		try{
@@ -447,10 +477,10 @@ public class App implements Testable {
 			// edit account balances
 			editAccountBalance(from, amount*-1);
 			editAccountBalance(to, amount);
+			fromNewBalance = getAccountBalance(from);
+			toNewBalance = getAccountBalance(to);
 			// create Transaction
-			int fromId = 0;
-			int toId = 0;
-			createTransaction("pocket", amount, from, to);
+			createTransaction("pay-friend", amount, from, to);
 		}catch(SQLException e) {
 			System.err.print(e.getMessage());
 			return "1 "+fromNewBalance+" "+toNewBalance;
@@ -530,7 +560,7 @@ public class App implements Testable {
 	 * fail if balance <0 after transaction
 	 * @param aid account id
 	 * @param amount negative to subtract, positive to add
-	 * @return a string "r", where r=0 for success, 1 for error, -1 for failed transaction
+	 * @return a string "r", where r=0 if success, 1 for error
 	 */
 	@Override
 	public String editAccountBalance(String aid,double amount) {
@@ -546,7 +576,7 @@ public class App implements Testable {
 			balance = rs.getInt("balance");
 			balance += amount;
 			if (balance < 0) {
-				return "-1";
+				return "1";
 			}
 			// close account, update balance
 			if (balance <= .01) {
@@ -567,6 +597,49 @@ public class App implements Testable {
 			return "1";
 		}
 		return "0";
+	}
+
+	/**
+	 * Get current balance of account
+	 * @param aid account id
+	 * @return account balance as a string, or "1" for error
+	 */
+	@Override
+	public String getAccountBalance(String aid) {
+		Statement stmt;
+		ResultSet rs;
+		String getBalance = "SELECT A.balance FROM Accounts A WHERE A.aid="+aid;
+		double balance = 0.0;
+		try {
+			stmt = _connection.createStatement();
+			rs = stmt.executeQuery(getBalance);
+			balance = rs.getInt("balance");
+			return(Double.toString(balance));
+		} catch(SQLException e) {
+			System.err.print(e.getMessage());
+			return "1";
+		}
+	}
+
+	/**
+	 * get account type
+	 * @return AccountType as a string, or "1" for error
+	 */
+	@Override
+	public String getAccountType(String aid) {
+		Statement stmt;
+		ResultSet rs;
+		String query = "SELECT A.atype FROM Accounts A WHERE A.aid="+aid;
+		String accountType;
+		try{
+			stmt = _connection.createStatement();
+			rs = stmt.executeQuery(query);
+			accountType = rs.getString("atype");
+			return accountType;
+		}catch(SQLException e){
+			System.err.print(e.getMessage());
+			return "1";
+		}
 	}
 
 	public void populateCustomerData(){
@@ -648,33 +721,33 @@ public class App implements Testable {
 
 	public void populateAccountData() {
 		final String a = "INSERT INTO Accounts(atype,status,bankname,balance,interest,aid,taxid)\n" +
-				"VALUES ('student-checking','open','San Francisco',0,3.0,17431,344151573)";
+				"VALUES ('STUDENT_CHECKING','open','San Francisco',0,3.0,17431,344151573)";
 		final String b = "INSERT INTO Accounts(atype,status,bankname,balance,interest,aid,taxid)\n" +
-				"VALUES ('student-checking','open','Los Angeles',0,3.0,54321,212431965)";
+				"VALUES ('STUDENT_CHECKING','open','Los Angeles',0,3.0,54321,212431965)";
 		final String c = "INSERT INTO Accounts(atype,status,bankname,balance,interest,aid,taxid)\n" +
-				"VALUES ('Student-checking','open','Goleta',0,3.0,12121,207843218)";
+				"VALUES ('STUDENT_CHECKING','open','Goleta',0,3.0,12121,207843218)";
 		final String d = "INSERT INTO Accounts(atype,status,bankname,balance,interest,aid,taxid)\n" +
-				"VALUES ('Interest-checking','open','Los Angeles',0,3.0,41725,201674933)";
+				"VALUES ('INTEREST_CHECKING','open','Los Angeles',0,3.0,41725,201674933)";
 		final String e = "INSERT INTO Accounts(atype,status,bankname,balance,interest,aid,taxid)\n" +
-				"VALUES ('Interest-checking','open','Santa Barbara',0,3.0,76543,212116070)";
+				"VALUES ('INTEREST_CHECKING','open','Santa Barbara',0,3.0,76543,212116070)";
 		final String f = "INSERT INTO Accounts(atype,status,bankname,balance,interest,aid,taxid)\n" +
-				"VALUES ('Interest-checking','open','Goleta',0,3.0,93156,209378521)";
+				"VALUES ('INTEREST_CHECKING','open','Goleta',0,3.0,93156,209378521)";
 		final String g = "INSERT INTO Accounts(atype,status,bankname,balance,interest,aid,taxid)\n" +
-				"VALUES ('Savings','open','Santa Barbara',0,4.8,43942,361721022)";
+				"VALUES ('SAVINGS','open','Santa Barbara',0,4.8,43942,361721022)";
 		final String h = "INSERT INTO Accounts(atype,status,bankname,balance,interest,aid,taxid)\n" +
-				"VALUES ('Savings','open','Los Angeles',0,4.8,29107,209378521)";
+				"VALUES ('SAVINGS','open','Los Angeles',0,4.8,29107,209378521)";
 		final String i = "INSERT INTO Accounts(atype,status,bankname,balance,interest,aid,taxid)\n" +
-				"VALUES ('Savings','open','San Francisco',0,4.8,19023,412231856)";
+				"VALUES ('SAVINGS','open','San Francisco',0,4.8,19023,412231856)";
 		final String j = "INSERT INTO Accounts(atype,status,bankname,balance,interest,aid,taxid)\n" +
-				"VALUES ('Savings','open','Goleta',0,4.8,32156,188212217)";
+				"VALUES ('SAVINGS','open','Goleta',0,4.8,32156,188212217)";
 		final String k = "INSERT INTO Accounts(atype,status,bankname,balance,interest,aid,taxid)\n" +
-				"VALUES ('Pocket','open','Goleta',0,0,53027,207843218)";
+				"VALUES ('POCKET','open','Goleta',0,0,53027,207843218)";
 		final String l = "INSERT INTO Accounts(atype,status,bankname,balance,interest,aid,taxid)\n" +
-				"VALUES ('Pocket','open','Isla Vista',0,0,43947,212116070)";
+				"VALUES ('POCKET','open','Isla Vista',0,0,43947,212116070)";
 		final String m = "INSERT INTO Accounts(atype,status,bankname,balance,interest,aid,taxid)\n" +
-				"VALUES ('Pocket','open','Santa Cruz',0,0,60413,400651982)";
+				"VALUES ('POCKET','open','Santa Cruz',0,0,60413,400651982)";
 		final String n = "INSERT INTO Accounts(atype,status,bankname,balance,interest,aid,taxid)\n" +
-				"VALUES ('Pocket','open','Santa Barbara',0,0,67521,401605312)";
+				"VALUES ('POCKET','open','Santa Barbara',0,0,67521,401605312)";
 
 		Statement stmt;
 		try {
@@ -854,4 +927,5 @@ public class App implements Testable {
 			System.out.println(ex);
 		}
 	}
+
 }
