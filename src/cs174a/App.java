@@ -488,6 +488,94 @@ public class App implements Testable {
 	}
 
 	/**
+	 * Generate list of closed accounts.
+	 * @return a string "r id1 id2 ... idn", where
+	 *         r = 0 for success, 1 for error; and
+	 *         id1 id2 ... idn is a list of space-separated closed account IDs.
+	 */
+	@Override
+	public String listClosedAccounts() {
+		String query = "SELECT A.aid " +
+				"FROM Accounts A " +
+				"WHERE A.status='closed'";
+		String ids = "";
+		Statement stmt;
+		ResultSet rs;
+		try {
+			stmt = _connection.createStatement();
+			rs = stmt.executeQuery(query);
+			while(rs.next()){
+				ids += " ";
+				ids += rs.getString("aid");
+			}
+			return "0" + ids;
+		} catch(SQLException e) {
+			System.err.print(e.getMessage());
+			return "1" + ids;
+		}
+	}
+
+	/**
+	 * Subtract money from one account w/ aid and add it to another account w/ aid2.
+	 * A transfer can only occur between two accounts that have at least one
+	 * owner in common. If the transfer was requested by a customer, she or he
+	 * must be an owner of both accounts. Amount < $2000.
+	 * @param aid checking or savings account
+	 * @param aid2 checking or savings account
+	 * @param amount amount to be transferred
+	 * @return a string r="0" for success, "1" for error
+	 */
+	String transfer(String aid, String aid2, double amount) {
+		return "0";
+	}
+
+	/**
+	 * Move amount of money from account w/ aid back to linked account w/ aid2.
+	 * There is a 3% fee for this action.
+	 * @param aid pocket account
+	 * @param aid2 linked checking or savings account
+	 * @param amount amount to be collected (incurs 3% fee)
+	 * @return a string r="0" for success, "1" for error
+	 */
+	String collect(String aid, String aid2, double amount) {
+		return "0";
+	}
+
+	/**
+	 * subtract money from account w aid and add it to another. The customer that
+	 * requests this action must be an owner of account w aid. There is a 2% fee
+	 * for this action.
+	 * @param aid savings or checking account
+	 * @param aid2 another checking or savings account
+	 * @param amount amount to be collected (incurs a 3% fee)
+	 * @return a string r="0" for success, "1" for error
+	 */
+	String wire(String aid, String aid2, double amount) {
+		return "0";
+	}
+
+	/**
+	 * Subtract money from the checking account w aid. Associated with a check
+	 * is a check number.
+	 * @param aid checking account
+	 * @param amount amount
+	 * @return a string r="0" for success, "1" for error
+	 */
+	String writeCheck(String aid, double amount) {
+		return "0";
+	}
+
+	/**
+	 * Add money to the checking or savings account. The amount added is the
+	 * monthly interest rate times the average daily balance for the month.
+	 * Interest is added at the end of each month.
+	 * @return a string r="0" for success, "1" for error
+	 */
+	String accrueInterest() {
+		return "0";
+	}
+
+	/**
 	 * Add Transactions entry and TwoSided entry (if needed) to db
 	 * @param ttype type of transaction
 	 * @param amount dollar amount
@@ -495,7 +583,6 @@ public class App implements Testable {
 	 * @param aid2 for two sided transactions, "-1" otherwise
 	 * @return a string "r", where r=0 for success, 1 for error
 	 */
-	@Override
 	public String createTransaction(String ttype, double amount, String aid,String aid2) {
 		SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd");
 		String currentDate = formatter.format(java.time.LocalDate.now());
@@ -525,35 +612,6 @@ public class App implements Testable {
 	}
 
 	/**
-	 * Generate list of closed accounts.
-	 * @return a string "r id1 id2 ... idn", where
-	 *         r = 0 for success, 1 for error; and
-	 *         id1 id2 ... idn is a list of space-separated closed account IDs.
-	 */
-	@Override
-	public String listClosedAccounts() {
-		String query = "SELECT A.aid " +
-				       "FROM Accounts A " +
-					   "WHERE A.status='closed'";
-		String ids = "";
-		Statement stmt;
-		ResultSet rs;
-		try {
-			stmt = _connection.createStatement();
-			rs = stmt.executeQuery(query);
-			while(rs.next()){
-				ids += " ";
-				ids += rs.getString("aid");
-			}
-			return "0" + ids;
-		} catch(SQLException e) {
-			System.err.print(e.getMessage());
-			return "1" + ids;
-		}
-	}
-
-	@Override
-	/**
 	 * Subtract to the checking or savings account balance
 	 * @return a string r = "0" for success, "1" for error
 	 */
@@ -570,7 +628,6 @@ public class App implements Testable {
 	 * Subtract money from the pocket account balance
 	 * @return a string r="0" for success, "1" for error
 	 */
-	@Override
 	public String purchase(String aid, double amount) {
 		String t = getAccountType(aid);
 		if(t!="POCKET") return "1";
@@ -591,7 +648,6 @@ public class App implements Testable {
 	 * @param amount negative to subtract, positive to add
 	 * @return a string "r", where r=0 if success, 1 for error
 	 */
-	@Override
 	public String editAccountBalance(String aid,double amount) {
 		Statement stmt;
 		ResultSet rs;
@@ -636,7 +692,6 @@ public class App implements Testable {
 	 * @param aid account id
 	 * @return account balance as a string, or "1" for error
 	 */
-	@Override
 	public String getAccountBalance(String aid) {
 		Statement stmt;
 		ResultSet rs;
@@ -659,7 +714,6 @@ public class App implements Testable {
 	 * get account type
 	 * @return AccountType as a string, or "1" for error
 	 */
-	@Override
 	public String getAccountType(String aid) {
 		Statement stmt;
 		ResultSet rs;
