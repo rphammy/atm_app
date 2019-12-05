@@ -429,7 +429,7 @@ public class App implements Testable {
 	public String showBalance( String accountId ) {
 		String balance = getAccountBalance(accountId);
 		if(balance=="1") {
-			return "1 err";
+			return "1";
 		} else {
 			return "0 "+balance;
 		}
@@ -658,22 +658,25 @@ public class App implements Testable {
 		try {
 			stmt = _connection.createStatement();
 			rs = stmt.executeQuery(findAccountQuery);
-			balance = rs.getInt("balance");
+			while(rs.next()){
+				balance = rs.getInt("balance");
+			}
 			balance += amount;
 			if (balance < 0) {
 				return "1";
 			}
 			// close account, update balance
-			if (balance <= .01) {
-				updateAccount = "UPDATE Accounts " +
-						"SET balance = " + balance +
-						", status = 'closed'" +
+			else if (balance <= .01) {
+				updateAccount =
+						"UPDATE Accounts " +
+						"SET balance = " + balance + ", status = 'closed'" +
 						" WHERE aid = " + aid;
 				stmt.executeUpdate(updateAccount);
 			}
-			if (balance > .01) {
-				updateAccount = "UPDATE Accounts " +
-						"Set balance = " + balance +
+			else if (balance > .01) {
+				updateAccount =
+						"UPDATE Accounts " +
+						"SET balance = " + balance +
 						" WHERE aid = " + aid;
 				stmt.executeUpdate(updateAccount);
 			}
@@ -697,7 +700,9 @@ public class App implements Testable {
 		try {
 			stmt = _connection.createStatement();
 			rs = stmt.executeQuery(getBalance);
-			balance = rs.getInt("balance");
+			while(rs.next()) {
+				balance = rs.getDouble("balance");
+			}
 			return(Double.toString(balance));
 		} catch(SQLException e) {
 			System.err.print(e.getMessage());
@@ -713,11 +718,13 @@ public class App implements Testable {
 		Statement stmt;
 		ResultSet rs;
 		String query = "SELECT A.atype FROM Accounts A WHERE A.aid="+aid;
-		String accountType;
+		String accountType = "";
 		try{
 			stmt = _connection.createStatement();
 			rs = stmt.executeQuery(query);
-			accountType = rs.getString("atype");
+			while(rs.next()){
+				accountType = rs.getString("atype");
+			}
 			return accountType;
 		}catch(SQLException e){
 			System.err.print(e.getMessage());
