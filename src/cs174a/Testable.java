@@ -102,7 +102,7 @@ interface Testable
 	 *         old is the old account balance, with up to 2 decimal places (e.g. 1000.12, as with %.2f); and
 	 *         new is the new account balance, with up to 2 decimal places.
 	 */
-//	String deposit( String accountId, double amount );
+	String deposit( String accountId, double amount );
 
 	/**
 	 * Show an account balance (regardless of type of account).
@@ -111,7 +111,7 @@ interface Testable
 	 *         r = 0 for success, 1 for error; and
 	 *         balance is the account balance, with up to 2 decimal places (e.g. with %.2f).
 	 */
-//	String showBalance( String accountId );
+	//String showBalance( String accountId );
 
 	/**
 	 * Move a specified amount of money from the linked checking/savings account to the pocket account.
@@ -153,4 +153,12 @@ interface Testable
 	 * @return a string "r", where r=0 for success, 1 for error
 	 */
 	String createTransaction(String ttype,double amount,String aid,String aid2);
+
+	/**
+	 * Add or subtract a given amount from account balance
+	 * @param aid account id
+	 * @param amount negative to subtract, positive to add
+	 * @return a string "r", where r=0 for success, 1 for error
+	 */
+	public String editAccountBalance(String aid,double amount);
 }
