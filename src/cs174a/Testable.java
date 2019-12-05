@@ -160,5 +160,5 @@ interface Testable
 	 * @param amount negative to subtract, positive to add
 	 * @return a string "r", where r=0 for success, 1 for error
 	 */
-	public String editAccountBalance(int aid,float amount);
+	public String editAccountBalance(String aid,double amount);
 }

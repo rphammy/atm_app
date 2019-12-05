@@ -444,6 +444,9 @@ public class App implements Testable {
 			if(!rs.next()) {
 				amount = amount-5.0;
 			}
+			// edit account balances
+			editAccountBalance(from, amount*-1);
+			editAccountBalance(to, amount);
 			// create Transaction
 			int fromId = 0;
 			int toId = 0;
@@ -452,7 +455,6 @@ public class App implements Testable {
 			System.err.print(e.getMessage());
 			return "1 "+fromNewBalance+" "+toNewBalance;
 		}
-		// edit account balances
 		return "0 "+fromNewBalance+" "+toNewBalance;
 	}
 
@@ -530,7 +532,7 @@ public class App implements Testable {
 	 * @return a string "r", where r=0 for success, 1 for error, -1 for failed transaction
 	 */
 	@Override
-	public String editAccountBalance(int aid,float amount) {
+	public String editAccountBalance(String aid,double amount) {
 		Statement stmt;
 		ResultSet rs;
 		String findAccountQuery = "SELECT A.balance FROM Accounts A WHERE A.aid="+aid;
