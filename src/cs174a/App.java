@@ -401,14 +401,19 @@ public class App implements Testable {
 	 */
 	@Override
 	public String deposit( String accountId, double amount ) {
-		// DO WE NEED TO CHECK ACCOUNT TYPE?
+		String t = getAccountType(accountId);
+		// check account type
+		if(t=="POCKET") {
+			System.out.print("Transaction not valid on Pocket account");
+			return "1";
+		}
+		// perform deposit
 		Statement stmt;
-		String oldBalance = "err";
-		String newBalance = "err";
+		String oldBalance = getAccountBalance(accountId);
+		String newBalance = getAccountBalance(accountId);
 		String r;
-		oldBalance = getAccountBalance(accountId);
 		r=editAccountBalance(accountId, amount);
-		if(r=="1" || r=="-1") return "1 "+oldBalance+" "+newBalance;
+		if(r=="1") return "1 "+oldBalance+" "+newBalance;
 		createTransaction("deposit",amount,accountId,"-1");
 		newBalance = getAccountBalance(accountId);
 		return "0 "+oldBalance+" "+newBalance;
