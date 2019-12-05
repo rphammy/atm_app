@@ -523,6 +523,7 @@ public class App implements Testable {
 		}
 	}
 
+
 	/**
 	 * Add or subtract a given amount from account balance
 	 * close account if balance <=.01 but >0
@@ -535,36 +536,322 @@ public class App implements Testable {
 	public String editAccountBalance(String aid,double amount) {
 		Statement stmt;
 		ResultSet rs;
-		String findAccountQuery = "SELECT A.balance FROM Accounts A WHERE A.aid="+aid;
+		String findAccountQuery = "SELECT A.balance FROM Accounts A WHERE A.aid=" + aid;
 		String updateAccount = "";
 		double balance = 0.0;
 		// find account
 		try {
-			stmt=_connection.createStatement();
+			stmt = _connection.createStatement();
 			rs = stmt.executeQuery(findAccountQuery);
 			balance = rs.getInt("balance");
 			balance += amount;
-			if(balance<0) {
+			if (balance < 0) {
 				return "-1";
 			}
 			// close account, update balance
-			if(balance<=.01) {
+			if (balance <= .01) {
 				updateAccount = "UPDATE Accounts " +
 						"SET balance = " + balance +
 						", status = 'closed'" +
-						" WHERE aid = "+aid;
+						" WHERE aid = " + aid;
 				stmt.executeUpdate(updateAccount);
 			}
-			if(balance>.01) {
-				updateAccount = "UPDATE Accounts "+
-							"Set balance = "+ balance +
-							" WHERE aid = "+aid;
+			if (balance > .01) {
+				updateAccount = "UPDATE Accounts " +
+						"Set balance = " + balance +
+						" WHERE aid = " + aid;
 				stmt.executeUpdate(updateAccount);
 			}
-		} catch(SQLException e) {
+		} catch (SQLException e) {
 			System.err.print(e.getMessage());
 			return "1";
 		}
 		return "0";
+	}
+
+	public void populateCustomerData(){
+		String alfred = "INSERT INTO Customers (taxid, cname, address, pinkey) \n" +
+				"VALUES (361721022, 'Alfred Hitchcock', '6667 El Colegio #40', '1234')";
+
+		String billy = "INSERT INTO Customers (taxid, cname, address, pinkey) \n" +
+				"VALUES (231403227, 'Billy Clinton','5777 Hollister' ,'1468')";
+
+		String cindy = "INSERT INTO Customers (taxid, cname, address, pinkey) \n" +
+				"VALUES (412231856, 'Cindy Laugher', '7000 Hollister', '3764')";
+
+		String david = "INSERT INTO Customers (taxid, cname, address, pinkey) \n" +
+				"VALUES (207843218, 'David Copperfill','1357 State St', '8582')";
+
+		String elizabeth = "INSERT INTO Customers (taxid, cname, address, pinkey) \n" +
+				"VALUES (122219876, 'Elizabeth Sailor', '4321 State St', '3856')";
+
+		String fatal = "INSERT INTO Customers (taxid, cname, address, pinkey) \n" +
+				"VALUES (401605312, 'Fatal Castro','3756 La Cumbre Plaza' ,'8193')";
+
+		String george = "INSERT INTO Customers (taxid, cname, address, pinkey) \n" +
+				"VALUES (201674933, 'George Brush', '5346 Foothill Av', '9824')";
+
+		String hurryson = "INSERT INTO Customers (taxid, cname, address, pinkey) \n" +
+				"VALUES (212431965, 'Hurryson Ford', '678 State St', '3532')";
+
+		String ivan = "INSERT INTO Customers (taxid, cname, address, pinkey) \n" +
+				"VALUES (322175130, 'Ivan Lendme','1235 Johnson Dr', '8471')";
+
+		String joe = "INSERT INTO Customers (taxid, cname, address, pinkey) \n" +
+				"VALUES (344151573, 'Joe Pepsi','3210 State St' ,'3692')";
+
+		String kelvin = "INSERT INTO Customers (taxid, cname, address, pinkey) \n" +
+				"VALUES (209378521, 'Kelvin Costner','Santa Cruz #3579', '4659')";
+
+		String li = "INSERT INTO Customers (taxid, cname, address, pinkey) \n" +
+				"VALUES (212116070, 'Li Kung', '2 People''s Rd Beijing', '9173')";
+
+		String magic = "INSERT INTO Customers (taxid, cname, address, pinkey) \n" +
+				"VALUES (188212217, 'Magic Jordon','3852 Court Rd', '7351')";
+
+		String nam = "INSERT INTO Customers (taxid, cname, address, pinkey) \n" +
+				"VALUES (203491209, 'Nam-Hoi Chung', '1997 People''s St HK', '5340')";
+
+		String olive = "INSERT INTO Customers (taxid, cname, address, pinkey) \n" +
+				"VALUES (210389768, 'Olive Stoner', '6689 El Colegio #151', '8452')";
+
+		String pit = "INSERT INTO Customers (taxid, cname, address, pinkey) \n" +
+				"VALUES (400651982, 'Pit Wilson', '911 State St' ,'1821')";
+		Statement stmt;
+		try{
+			stmt = _connection.createStatement();
+
+			stmt.executeUpdate(alfred);
+			stmt.executeUpdate(billy);
+			stmt.executeUpdate(cindy);
+			stmt.executeUpdate(david);
+			stmt.executeUpdate(elizabeth);
+			stmt.executeUpdate(fatal);
+			stmt.executeUpdate(george);
+			stmt.executeUpdate(hurryson);
+			stmt.executeUpdate(ivan);
+			stmt.executeUpdate(joe);
+			stmt.executeUpdate(kelvin);
+			stmt.executeUpdate(li);
+			stmt.executeUpdate(magic);
+			stmt.executeUpdate(nam);
+			stmt.executeUpdate(olive);
+			stmt.executeUpdate(pit);
+
+			System.out.println("Customers Populated");
+		}
+
+		catch(SQLException e) {
+			System.out.println(e);
+		}
+	}
+
+	public void populateAccountData() {
+		final String a = "INSERT INTO Accounts(atype,status,bankname,balance,interest,aid,taxid)\n" +
+				"VALUES ('student-checking','open','San Francisco',0,3.0,17431,344151573)";
+		final String b = "INSERT INTO Accounts(atype,status,bankname,balance,interest,aid,taxid)\n" +
+				"VALUES ('student-checking','open','Los Angeles',0,3.0,54321,212431965)";
+		final String c = "INSERT INTO Accounts(atype,status,bankname,balance,interest,aid,taxid)\n" +
+				"VALUES ('Student-checking','open','Goleta',0,3.0,12121,207843218)";
+		final String d = "INSERT INTO Accounts(atype,status,bankname,balance,interest,aid,taxid)\n" +
+				"VALUES ('Interest-checking','open','Los Angeles',0,3.0,41725,201674933)";
+		final String e = "INSERT INTO Accounts(atype,status,bankname,balance,interest,aid,taxid)\n" +
+				"VALUES ('Interest-checking','open','Santa Barbara',0,3.0,76543,212116070)";
+		final String f = "INSERT INTO Accounts(atype,status,bankname,balance,interest,aid,taxid)\n" +
+				"VALUES ('Interest-checking','open','Goleta',0,3.0,93156,209378521)";
+		final String g = "INSERT INTO Accounts(atype,status,bankname,balance,interest,aid,taxid)\n" +
+				"VALUES ('Savings','open','Santa Barbara',0,4.8,43942,361721022)";
+		final String h = "INSERT INTO Accounts(atype,status,bankname,balance,interest,aid,taxid)\n" +
+				"VALUES ('Savings','open','Los Angeles',0,4.8,29107,209378521)";
+		final String i = "INSERT INTO Accounts(atype,status,bankname,balance,interest,aid,taxid)\n" +
+				"VALUES ('Savings','open','San Francisco',0,4.8,19023,412231856)";
+		final String j = "INSERT INTO Accounts(atype,status,bankname,balance,interest,aid,taxid)\n" +
+				"VALUES ('Savings','open','Goleta',0,4.8,32156,188212217)";
+		final String k = "INSERT INTO Accounts(atype,status,bankname,balance,interest,aid,taxid)\n" +
+				"VALUES ('Pocket','open','Goleta',0,0,53027,207843218)";
+		final String l = "INSERT INTO Accounts(atype,status,bankname,balance,interest,aid,taxid)\n" +
+				"VALUES ('Pocket','open','Isla Vista',0,0,43947,212116070)";
+		final String m = "INSERT INTO Accounts(atype,status,bankname,balance,interest,aid,taxid)\n" +
+				"VALUES ('Pocket','open','Santa Cruz',0,0,60413,400651982)";
+		final String n = "INSERT INTO Accounts(atype,status,bankname,balance,interest,aid,taxid)\n" +
+				"VALUES ('Pocket','open','Santa Barbara',0,0,67521,401605312)";
+
+		Statement stmt;
+		try {
+			stmt = _connection.createStatement();
+
+			stmt.executeUpdate(a);
+			stmt.executeUpdate(b);
+			stmt.executeUpdate(c);
+			stmt.executeUpdate(d);
+			stmt.executeUpdate(e);
+			stmt.executeUpdate(f);
+			stmt.executeUpdate(g);
+			stmt.executeUpdate(h);
+			stmt.executeUpdate(i);
+			stmt.executeUpdate(j);
+			stmt.executeUpdate(k);
+			stmt.executeUpdate(l);
+			stmt.executeUpdate(m);
+			stmt.executeUpdate(n);
+
+			System.out.println("Accounts Populated");
+		}
+		catch (SQLException ex){
+			System.out.println(ex);
+		}
+	}
+
+	public void populatePocketData() {
+		final String a = "INSERT INTO Pocket(aid, aid2) \n" +
+				"VALUES(53027, 12121)";
+		final String b = "INSERT INTO Pocket(aid, aid2)\n" +
+				"VALUES(43947, 29107)";
+		final String c = "INSERT INTO Pocket(aid, aid2) \n" +
+				"VALUES(60413, 43942)";
+		final String d = "INSERT INTO Pocket(aid, aid2) \n" +
+				"VALUES(67521, 19023)";
+
+		Statement stmt;
+
+		try{
+			stmt = _connection.createStatement();
+			stmt.executeUpdate(a);
+			stmt.executeUpdate(b);
+			stmt.executeUpdate(c);
+			stmt.executeUpdate(d);
+
+			System.out.println("Pockets Populated");
+		}
+		catch(SQLException ex) {
+			System.out.println(ex);
+		}
+	}
+
+	public void populateOwnersData() {
+		final String a = "INSERT INTO Owners(aid,taxid) \n" +
+				"VALUES(17431, 344151573)";
+		final String b = "INSERT INTO Owners(aid,taxid) \n" +
+				"VALUES(17431, 412231856)";
+		final String c = "INSERT INTO Owners(aid,taxid) \n" +
+				"VALUES(17431, 322175130)";
+		final String d = "INSERT INTO Owners(aid,taxid) \n" +
+				"VALUES(54321, 212431965)";
+		final String e = "INSERT INTO Owners(aid,taxid) \n" +
+				"VALUES(54321, 412231856 )";
+		final String f = "INSERT INTO Owners(aid,taxid) \n" +
+				"VALUES(54321, 122219876)";
+		final String g = "INSERT INTO Owners(aid,taxid) \n" +
+				"VALUES(54321, 203491209)";
+		final String h = "INSERT INTO Owners(aid,taxid) \n" +
+				"VALUES(12121, 207843218)";
+		final String i = "INSERT INTO Owners(aid,taxid)\n" +
+				"VALUES(41725, 201674933)";
+		final String j = "INSERT INTO Owners(aid,taxid) \n" +
+				"VALUES(41725,401605312)";
+		final String k = "INSERT INTO Owners(aid,taxid) \n" +
+				"VALUES(41725,231403227)";
+		final String l = "INSERT INTO Owners(aid,taxid) \n" +
+				"VALUES(76543,212116070)";
+		final String m = "INSERT INTO Owners(aid,taxid) \n" +
+				"VALUES(76543,188212217)";
+		final String n = "INSERT INTO Owners(aid,taxid) \n" +
+				"VALUES(93156,209378521)";
+		final String o = "INSERT INTO Owners(aid,taxid) \n" +
+				"VALUES(93156,188212217)";
+		final String p = "INSERT INTO Owners(aid,taxid) \n" +
+				"VALUES(93156,210389768)";
+		final String q = "INSERT INTO Owners(aid,taxid) \n" +
+				"VALUES(93156,122219876)";
+		final String r =  "INSERT INTO Owners(aid,taxid) \n" +
+				"VALUES(93156,203491209)";
+		final String s = "INSERT INTO Owners(aid,taxid) \n" +
+				"VALUES(43942,361721022)";
+		final String t = "INSERT INTO Owners(aid,taxid) \n" +
+				"VALUES(43942,400651982)";
+		final String u = "INSERT INTO Owners(aid,taxid) \n" +
+				"VALUES(43942,212431965)";
+		final String v = "INSERT INTO Owners(aid,taxid) \n" +
+				"VALUES(43942,322175130)";
+		final String w = "INSERT INTO Owners(aid,taxid) \n" +
+				"VALUES(29107,209378521)";
+		final String x = "INSERT INTO Owners(aid,taxid) \n" +
+				"VALUES(29107, 212116070)";
+		final String y = "INSERT INTO Owners(aid,taxid) \n" +
+				"VALUES(29107, 210389768)";
+		final String z = "INSERT INTO Owners(aid,taxid) \n" +
+				"VALUES(19023, 412231856)";
+		final String aa = "INSERT INTO Owners(aid,taxid) \n" +
+				"VALUES(19023, 201674933)";
+		final String bb = "INSERT INTO Owners(aid,taxid) \n" +
+				"VALUES(19023, 401605312)";
+		final String cc = "INSERT INTO Owners(aid,taxid) \n" +
+				"VALUES(32156, 188212217 )";
+		final String dd = "INSERT INTO Owners(aid,taxid) \n" +
+				"VALUES(32156, 207843218)";
+		final String ee = "INSERT INTO Owners(aid,taxid) \n" +
+				"VALUES(32156, 122219876)";
+		final String ff = "INSERT INTO Owners(aid,taxid) \n" +
+				"VALUES(32156, 344151573)";
+		final String gg = "INSERT INTO Owners(aid,taxid) \n" +
+				"VALUES(32156,203491209)";
+		final String hh = "INSERT INTO Owners(aid,taxid) \n" +
+				"VALUES(32156,210389768)";
+		final String ii = "INSERT INTO Owners(aid,taxid) \n" +
+				"VALUES(53027, 207843218)";
+		final String jj = "INSERT INTO Owners(aid,taxid) \n" +
+				"VALUES(43947,212116070)";
+		final String kk = "INSERT INTO Owners(aid,taxid) \n" +
+				"VALUES(60413,400651982)";
+		final String ll = "INSERT INTO Owners(aid,taxid) \n" +
+				"VALUES(67521,401605312)";
+
+		Statement stmt;
+
+		try{
+			stmt = _connection.createStatement();
+			stmt.executeUpdate(a);
+			stmt.executeUpdate(b);
+			stmt.executeUpdate(c);
+			stmt.executeUpdate(d);
+			stmt.executeUpdate(e);
+			stmt.executeUpdate(f);
+			stmt.executeUpdate(g);
+			stmt.executeUpdate(h);
+			stmt.executeUpdate(i);
+			stmt.executeUpdate(j);
+			stmt.executeUpdate(k);
+			stmt.executeUpdate(l);
+			stmt.executeUpdate(m);
+			stmt.executeUpdate(n);
+			stmt.executeUpdate(o);
+			stmt.executeUpdate(p);
+			stmt.executeUpdate(q);
+			stmt.executeUpdate(r);
+			stmt.executeUpdate(s);
+			stmt.executeUpdate(t);
+			stmt.executeUpdate(u);
+			stmt.executeUpdate(v);
+			stmt.executeUpdate(w);
+			stmt.executeUpdate(x);
+			stmt.executeUpdate(y);
+			stmt.executeUpdate(z);
+			stmt.executeUpdate(aa);
+			stmt.executeUpdate(bb);
+			stmt.executeUpdate(cc);
+			stmt.executeUpdate(dd);
+			stmt.executeUpdate(ee);
+			stmt.executeUpdate(gg);
+			stmt.executeUpdate(hh);
+			stmt.executeUpdate(ii);
+			stmt.executeUpdate(jj);
+			stmt.executeUpdate(kk);
+			stmt.executeUpdate(ll);
+
+			System.out.println("Owners Populated");
+		}
+		catch(SQLException ex) {
+			System.out.println(ex);
+		}
 	}
 }
