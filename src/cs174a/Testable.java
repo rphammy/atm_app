@@ -144,6 +144,72 @@ interface Testable
 	 */
 	String listClosedAccounts();
 
+	///////////////////////////////////////// ADDITIONAL FUNCTIONS /////////////////////////////////////////////////////
+
+	/**
+	 * Subtract to the checking or savings account balance
+	 * @return a string r = "0" for success, "1" for error
+	 */
+	String withdrawal(String aid, double amount);
+
+	/**
+	 * Subtract money from the pocket account balance
+	 * @return a string r="0" for success, "1" for error
+	 */
+	String purchase(String aid, double amount);
+
+	/**
+	 * Subtract money from one account w/ aid and add it to another account w/ aid2.
+	 * A transfer can only occur between two accounts that have at least one
+	 * owner in common. If the transfer was requested by a customer, she or he
+	 * must be an owner of both accounts. Amount < $2000.
+	 * @param aid checking or savings account
+	 * @param aid2 checking or savings account
+	 * @param amount amount to be transferred
+	 * @return a string r="0" for success, "1" for error
+	 */
+	String transfer(String aid, String aid2, double amount);
+
+	/**
+	 * Move amount of money from account w/ aid back to linked account w/ aid2.
+	 * There is a 3% fee for this action.
+	 * @param aid pocket account
+	 * @param aid2 linked checking or savings account
+	 * @param amount amount to be collected (incurs 3% fee)
+	 * @return a string r="0" for success, "1" for error
+	 */
+	String collect(String aid, String aid2, double amount);
+
+	/**
+	 * subtract money from account w aid and add it to another. The customer that
+	 * requests this action must be an owner of account w aid. There is a 2% fee
+	 * for this action.
+	 * @param aid savings or checking account
+	 * @param aid2 another checking or savings account
+	 * @param amount amount to be collected (incurs a 3% fee)
+	 * @return a string r="0" for success, "1" for error
+	 */
+	String wire(String aid, String aid2, double amount);
+
+	/**
+	 * Subtract money from the checking account w aid. Associated with a check
+	 * is a check number.
+	 * @param aid checking account
+	 * @param amount amount
+	 * @return a string r="0" for success, "1" for error
+	 */
+	String writeCheck(String aid, double amount);
+
+	/**
+	 * Add money to the checking or savings account. The amount added is the
+	 * monthly interest rate times the average daily balance for the month.
+	 * Interest is added at the end of each month.
+	 * @return a string r="0" for success, "1" for error
+	 */
+	String accrueInterest();
+
+
+	/////////////////////////////////////////// HELPER FUNCTIONS ///////////////////////////////////////////////////////
 	/**
 	 * Add transaction to db
 	 * @param ttype type of transaction
