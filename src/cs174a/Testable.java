@@ -169,6 +169,10 @@ interface Testable
 	 */
 	String getAccountBalance(String aid);
 
-	// HELPER FUNCTION TO CHECK IF TRANSACTIONS ARE LEGAtL?
-	String checkAccountType(AccountType aType);
+	/**
+	 * get account type
+	 * @return AccountType as a string, or "1" for error
+	 */
+	String getAccountType(String aid);
+
 }
