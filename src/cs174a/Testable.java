@@ -160,5 +160,15 @@ interface Testable
 	 * @param amount negative to subtract, positive to add
 	 * @return a string "r", where r=0 for success, 1 for error
 	 */
-	public String editAccountBalance(String aid,double amount);
+	String editAccountBalance(String aid,double amount);
+
+	/**
+	 * Get current balance of account
+	 * @param aid account id
+	 * @return account balance as a string, or "-1" for error
+	 */
+	String getAccountBalance(String aid);
+
+	// HELPER FUNCTION TO CHECK IF TRANSACTIONS ARE LEGAtL?
+	String checkAccountType(AccountType aType);
 }
