@@ -39,12 +39,10 @@ public class Main
 			app.populateOwnersData();
 			app.populatePocketData();
 
-//			app.editAccountBalance("17431", 30);
-//			System.out.println(r);
+			app.editAccountBalance("53027", 30);
+			System.out.println(r);
 //
 //
-//			r = app.createPocketAccount("11111", "17431", 10, "361721022");
-//			System.out.println(r);
 //
 //			r = app.getAccountBalance("17431");
 //			System.out.println("17431: " + r);
@@ -52,14 +50,35 @@ public class Main
 //			r = app.getAccountBalance("11111");
 //			System.out.println("11111: " + r);
 
+//			r = app.payFriend("17431", "43947", 10);
+//			System.out.println(r);
 
+
+			r = app.collect("53027", "12121", 10);
+			System.out.println(r);
+
+			r = app.getAccountBalance("53027");
+			System.out.println("53027: " + r);
+
+			r = app.getAccountBalance("12121");
+			System.out.println("12121: " + r);
+
+			r = app.collect("53027", "12121", 10);
+			System.out.println(r);
+
+
+			r = app.getAccountBalance("53027");
+			System.out.println("53027: " + r);
+
+			r = app.getAccountBalance("12121");
+			System.out.println("12121: " + r);
 
 //
 
 
 
-			r = app.createTransaction("INTEREST_CHECKING", 10, "17431", "-1");
-			System.out.println(r);
+//			r = app.createTransaction("INTEREST_CHECKING", 10, "17431", "-1");
+//			System.out.println(r);
 
 
 
