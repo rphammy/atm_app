@@ -844,7 +844,10 @@ public class App implements Testable {
 				System.out.println("  Final balance");
 				System.out.println("    " + getAccountBalance(rs.getString("aid")));
 				System.out.println();
-				totalFunds+=Integer.valueOf(getAccountBalance(rs.getString("aid")));
+				totalFunds+=Integer.parseInt(getAccountBalance(rs.getString("aid")));
+			}
+			if(totalFunds>100000){
+				System.out.println("WARNING: You have reached the limit of insurance")
 			}
 		}catch(SQLException e){
 			System.out.print(e.getMessage());
