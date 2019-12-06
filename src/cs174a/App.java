@@ -381,6 +381,24 @@ public class App implements Testable {
 	}
 
 	/**
+	 * Create a new pocket account.
+	 * @param id New account's ID.
+	 * @param linkedId Linked savings or checking account ID.
+	 * @param initialTopUp Initial balance to be deducted from linked account and deposited into new pocket account.
+	 * @param tin Existing customer's Tax ID number.  He/She will become the new pocket account's owner.
+	 * @return a string "r aid type balance tin", where
+	 *         r = 0 for success, 1 for error;
+	 *         aid is the new account id;
+	 *         type is the new account's type (see the enum codes above);
+	 *         balance is the account's initial balance with up to 2 decimal places (e.g. 1000.12, as with %.2f); and
+	 *         tin is the Tax ID of account's primary owner.
+	 */
+	@Override
+	public String createPocketAccount( String id, String linkedId, double initialTopUp, String tin ) {
+		return "0";
+	}
+
+	/**
 	 * Deposit a given amount of dollars to an existing checking or savings account.
 	 * @param accountId Account ID.
 	 * @param amount Non-negative amount to deposit.
@@ -546,6 +564,7 @@ public class App implements Testable {
 		return "0";
 	}
 
+	// NEEDS TESTING
 	/**
 	 * Subtract money from one account w/ aid and add it to another account w/ aid2.
 	 * A transfer can only occur between two accounts that have at least one
@@ -588,12 +607,13 @@ public class App implements Testable {
 			return "1";
 		}
 		// perform transfer
-		createTransaction("transfer",amount,aid,aid2);
 		editAccountBalance(aid, amount*-1);
 		editAccountBalance(aid2, amount);
+		createTransaction("transfer",amount,aid,aid2);
 		return "0";
 	}
 
+	// NEEDS TESTING
 	/**
 	 * Move amount of money from account w/ aid back to linked account w/ aid2.
 	 * There is a 3% fee for this action.
@@ -603,10 +623,34 @@ public class App implements Testable {
 	 * @return a string r="0" for success, "1" for error
 	 */
 	public String collect(String aid, String aid2, double amount) {
-
+		Statement stmt;
+		ResultSet rs;
+		String checkLink = "SELECT P.aid FROM Pocket P WHERE P.aid="+aid+" AND P.aid2="+aid2;
+		// check account types
+		if(getAccountType(aid)!="POCKET" || getAccountType(aid2)=="POCKET") {
+			System.out.print("Error: transaction must be between a pocket account and it's linked checking or savings account. ");
+			return "1";
+		}
+		try {
+			// check that accounts are linked
+			stmt = _connection.createStatement();
+			rs = stmt.executeQuery(checkLink);
+			if(!rs.next()) {
+				System.out.print("Error: transaction must be between a pocket account and it's linked checking or savings account. ");
+				return "1";
+			}
+		} catch(SQLException e) {
+			System.err.print(e.getMessage());
+			return "-1";
+		}
+		// update account balances and create transaction
+		editAccountBalance(aid, -1*(amount+amount*0.3));
+		editAccountBalance(aid2, amount);
+		createTransaction("collect",amount,aid,aid2);
 		return "0";
 	}
 
+	// NEEDS TESTING
 	/**
 	 * subtract money from account w aid and add it to another. The customer that
 	 * requests this action must be an owner of account w aid. There is a 2% fee
@@ -617,9 +661,37 @@ public class App implements Testable {
 	 * @return a string r="0" for success, "1" for error
 	 */
 	public String wire(String aid, String aid2, double amount) {
+		// check that customer is owner of account with aid
+		String query = "SELECT O.taxid " +
+				"FROM Owners O " +
+				"WHERE O.aid=" + aid +
+				" AND O.taxid =" + currentCustomerTid;
+		Statement stmt;
+		ResultSet rs;
+		try {
+			stmt=_connection.createStatement();
+			rs = stmt.executeQuery(query);
+			if(!rs.next()) {
+				System.out.print("Error: must be owner of account to wire money.");
+				return "1";
+			}
+		} catch(SQLException e) {
+			System.err.print(e.getMessage());
+			return "1";
+		}
+		// check account types
+		if(getAccountType(aid)=="POCKET" || getAccountType(aid2)=="POCKET") {
+			System.out.print("Error: transaction must be between checking/savings accounts. ");
+			return "1";
+		}
+		// update account balances and create transaction
+		editAccountBalance(aid, -1*(amount+amount*0.2));
+		editAccountBalance(aid2, amount);
+		createTransaction("wire",amount,aid,aid2);
 		return "0";
 	}
 
+	// NEEDS TESTING
 	/**
 	 * Subtract money from the checking account w aid. Associated with a check
 	 * is a check number.
@@ -628,16 +700,49 @@ public class App implements Testable {
 	 * @return a string r="0" for success, "1" for error
 	 */
 	public String writeCheck(String aid, double amount) {
+		// check accountTypes
+		if(getAccountType(aid)!="STUDENT_CHECKING" && getAccountType(aid)!="INTEREST_CHECKING") {
+			System.out.print("Error: checks can only be written from checking accounts");
+			return "1";
+		}
+		// edit account balance, create transaction
+		editAccountBalance(aid, amount);
+		createTransaction("writeCheck",amount,aid,"-1");
+		// update WriteCheck table
+		String update = "INSERT INTO WriteCheck(checkno, tid) VALUES ("+transactionId+","+transactionId+")";
+		Statement stmt;
+		try{
+			stmt=_connection.createStatement();
+			stmt.executeUpdate(update);
+		}catch(SQLException e){
+			System.err.print(e.getMessage());
+			return "1";
+		}
 		return "0";
 	}
 
+	// NEEDS TESTING
 	/**
 	 * Add money to the checking or savings account. The amount added is the
 	 * monthly interest rate times the average daily balance for the month.
 	 * Interest is added at the end of each month.
 	 * @return a string r="0" for success, "1" for error
 	 */
-	public String accrueInterest() {
+	public String accrueInterest(String aid) {
+		double balance = Double.valueOf(getAccountBalance(aid));
+		double interest = getInterest(aid);
+		balance += balance*interest;
+		String update = "UPDATE Accounts" +
+						"SET balance=" + balance +
+						" WHERE aid=" + aid;
+		Statement stmt;
+		try {
+			stmt=_connection.createStatement();
+			stmt.executeUpdate(update);
+		} catch(SQLException e) {
+			System.err.print(e.getMessage());
+			return "1";
+		}
 		return "0";
 	}
 
@@ -851,6 +956,29 @@ public class App implements Testable {
 			System.err.print(e.getMessage());
 			return "1";
 		}
+	}
+
+	// NOT TESTED
+	/**
+	 * get interest rate for a given account
+	 * @return a double r = interest if success, 0.0 otherwise
+	 */
+	public Double getInterest(String aid) {
+		Statement stmt;
+		ResultSet rs;
+		String query = "SELECT A.interest FROM Accounts A WHERE A.aid="+aid;
+		double interest = 0.0;
+		try{
+			stmt=_connection.createStatement();
+			rs=stmt.executeQuery(query);
+			while(rs.next()) {
+				interest = rs.getDouble("interest");
+			}
+		}catch(SQLException e){
+				System.err.print(e.getMessage());
+				return 0.0;
+		}
+		return interest;
 	}
 
 	///////////////////////////////////Populate Functions///////////////////////////////////////////////////////////////
