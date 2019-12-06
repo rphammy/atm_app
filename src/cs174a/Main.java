@@ -71,6 +71,7 @@ public class Main
 								case "0":
 									System.out.println("To enter a check transaction, enter checking account number and amount on check on separate lines:");
 									accountId = scanner.nextLine();
+
 									double amount = Double.parseDouble(scanner.nextLine());
 									r = app.writeCheck(accountId, amount);
 									if (r.equals("1")) {
@@ -141,7 +142,6 @@ public class Main
 											break;
 										default:
 											break;
-										break;
 									}
 									if (aType != AccountType.POCKET) {
 										System.out.println("Enter new account ID:");
@@ -173,62 +173,69 @@ public class Main
 									r = app.deleteClosedAccounts();
 									if (r.equals("0")) {
 										System.out.println("closed accounts deleted.");
-										break;
-										// delete transactions
-										case "8":
-											break;
-										// go to home page
-										case "9":
-											bankTelling = false;
-											break;
-										default:
-											System.out.println("Must choose between choices 0-9\n");
-											break;
 									}
+									break;
+								// delete transactions
+								case "8":
+									// NEED to check last day of month
+									System.out.println("deleting last month's transactions...");
+									r=app.deleteTransactions();
+									if(r.equals("0")) {
+										System.out.println("last month's transactions deleted.");
+									}
+									break;
+								// go to home page
+								case "9":
+									bankTelling = false;
+									break;
+								default:
+									System.out.println("Must choose between choices 0-9\n");
+									break;
 							}
-							break;
+						}
+						break;
 
-							// customer atm
-							case "1":
-								boolean usingATM = true;
-								while (usingATM) {
-									System.out.println("Choose one of the following:\n" +
-											"0 Deposit\n" +
-											"1 Top-Up\n" +
-											"2 Withdrawal\n" +
-											"3 Purchase\n" +
-											"4 Transfer\n" +
-											"5 Collect\n" +
-											"6 Pay-Friend\n" +
-											"7 Wire\n" +
-											"8 LOG OUT AND GO BACK TO HOME PAGE");
-									String customerChoice = scanner.nextLine();
-									switch (customerChoice) {
-										case "0":
-											break;
-										case "1":
-											break;
-										case "2":
-											break;
-										case "3":
-											break;
-										case "4":
-											break;
-										case "5":
-											break;
-										case "6":
-											break;
-										case "7":
-											break;
-										case "8":
-											usingATM = false;
-											break;
-										default:
-											System.out.println("Must choose between choices 0-8\n");
-											break;
-									}
-								}
-								break;
+					// customer atm
+					case "1":
+						boolean usingATM = true;
+						while (usingATM) {
+							System.out.println("Choose one of the following:\n" +
+									"0 Deposit\n" +
+									"1 Top-Up\n" +
+									"2 Withdrawal\n" +
+									"3 Purchase\n" +
+									"4 Transfer\n" +
+									"5 Collect\n" +
+									"6 Pay-Friend\n" +
+									"7 Wire\n" +
+									"8 LOG OUT AND GO BACK TO HOME PAGE");
+							String customerChoice = scanner.nextLine();
+							switch (customerChoice) {
+								case "0":
+									break;
+								case "1":
+									break;
+								case "2":
+									break;
+								case "3":
+									break;
+								case "4":
+									break;
+								case "5":
+									break;
+								case "6":
+									break;
+								case "7":
+									break;
+								case "8":
+									usingATM = false;
+									break;
+								default:
+									System.out.println("Must choose between choices 0-8\n");
+									break;
+							}
+						}
+						break;
 
 							// set sys date
 							case "2":
@@ -239,23 +246,23 @@ public class Main
 								app.setDate(year, month, day);
 								break;
 
-							// exit program
-							case "3":
-								runApp = false;
-								break;
+					// exit program
+					case "3":
+						runApp = false;
+						break;
 
-							default:
-								System.out.print("Must choose between choices 0-3\n");
-								break;
-						}
+					default:
+						System.out.print("Must choose between choices 0-3\n");
+						break;
 				}
 			}
+		}
 
 			// Our tests
 
 
 
-		}
 	}
-	//!### FINALIZAMOS
 }
+	//!### FINALIZAMOS
+
