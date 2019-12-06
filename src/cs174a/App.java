@@ -11,6 +11,8 @@ import oracle.jdbc.pool.OracleDataSource;
 import oracle.jdbc.OracleConnection;
 import sun.nio.cs.ext.EUC_CN;
 import java.text.SimpleDateFormat;
+import java.time.format.DateTimeFormatter;
+import java.time.LocalDateTime;
 import java.util.Date;
 
 import javax.xml.transform.Result;
@@ -33,21 +35,6 @@ public class App implements Testable {
 		sysDate = new Date(2011, 3, 1);
 		transactionId=0;
 		bankName="bank of Nuts";
-	}
-
-	/**
-	 * This is an example access operation to the DB.
-	 */
-	void exampleAccessToDB() {
-		// Statement and ResultSet are AutoCloseable and closed automatically.
-		try (Statement statement = _connection.createStatement()) {
-			try (ResultSet resultSet = statement.executeQuery("select owner, table_name from all_tables")) {
-				while (resultSet.next())
-					System.out.println(resultSet.getString(1) + " " + resultSet.getString(2) + " ");
-			}
-		} catch (SQLException e) {
-			System.err.println(e.getMessage());
-		}
 	}
 
 	////////////////////////////// Implement all of the methods given in the interface /////////////////////////////////
@@ -89,6 +76,7 @@ public class App implements Testable {
 		}
 	}
 
+	//good
 	@Override
 	public String dropTables() {
 		Statement stmt;
@@ -110,6 +98,7 @@ public class App implements Testable {
 	 * Create all of your tables in your DB.
 	 * @return a string "r", where r = 0 for success, 1 for error.
 	 */
+	//good
 	@Override
 	public String createTables() {
 		final String CREATE_CUSTOMERS=
@@ -199,21 +188,20 @@ public class App implements Testable {
 	 * @param address New customer's address.
 	 * @return a string "r", where r = 0 for success, 1 for error.
 	 */
+	//good
 	@Override
 	public String createCustomer( String accountId, String tin, String name, String address ){
 		final String INSERT_CUSTOMER =
 				"INSERT INTO Customers(taxid, cname, address, pinkey)"
 				+ "\nVALUES("
-				+ Integer.parseInt(tin) + ","
+				+ tin + ","
 				+ "'" + name + "'" + ","
 				+ "'" + address + "'" + ","
 				+ "NULL)";
 
 		try{
 			//insert customer data
-			System.out.println(INSERT_CUSTOMER);
 			Statement stmnt = _connection.createStatement();
-
 			stmnt.executeUpdate(INSERT_CUSTOMER);
 			return "0";
 		}
@@ -399,6 +387,7 @@ public class App implements Testable {
 	 *         old is the old account balance, with up to 2 decimal places (e.g. 1000.12, as with %.2f); and
 	 *         new is the new account balance, with up to 2 decimal places.
 	 */
+	//good
 	@Override
 	public String deposit( String accountId, double amount ) {
 		String t = getAccountType(accountId);
@@ -410,12 +399,16 @@ public class App implements Testable {
 		// perform deposit
 		Statement stmt;
 		String oldBalance = getAccountBalance(accountId);
-		String newBalance = getAccountBalance(accountId);
-		String r=editAccountBalance(accountId, amount);
-		if(r=="1") return "1 "+oldBalance+" "+newBalance;
-		createTransaction("deposit",amount,accountId,"-1");
+		String newBalance = oldBalance;
+		String r = editAccountBalance(accountId, amount);
+
+		if(r == "1")
+			return "1 " + oldBalance + " " + newBalance;
+
+		createTransaction("deposit", amount, accountId,"-1");
+
 		newBalance = getAccountBalance(accountId);
-		return "0 "+oldBalance+" "+newBalance;
+		return "0 " + oldBalance + " " + newBalance;
 	}
 
 	/**
@@ -425,6 +418,7 @@ public class App implements Testable {
 	 *         r = 0 for success, 1 for error; and
 	 *         balance is the account balance, with up to 2 decimal places (e.g. with %.2f).
 	 */
+	//good
 	@Override
 	public String showBalance( String accountId ) {
 		String balance = getAccountBalance(accountId);
@@ -494,6 +488,7 @@ public class App implements Testable {
 	 *         id1 id2 ... idn is a list of space-separated closed account IDs.
 	 */
 	@Override
+	//good
 	public String listClosedAccounts() {
 		String query = "SELECT A.aid " +
 				"FROM Accounts A " +
@@ -583,25 +578,31 @@ public class App implements Testable {
 	 * @param aid2 for two sided transactions, "-1" otherwise
 	 * @return a string "r", where r=0 for success, 1 for error
 	 */
-	public String createTransaction(String ttype, double amount, String aid,String aid2) {
-		SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd");
-		String currentDate = formatter.format(java.time.LocalDate.now());
-		String transactionQuery = "INSERT INTO Transactions(ttype, amount,tdate,tid,aid) VALUES ("
-									+ ttype + ","
+	//good
+	public String createTransaction(String ttype, double amount, String aid, String aid2) {
+		DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+//		SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd");
+//		String currentDate = formatter.format(java.time.LocalDate.now());
+		LocalDateTime now = LocalDateTime.now();
+
+		String transactionUpdate = "INSERT INTO Transactions(ttype, amount,tdate,tid,aid) VALUES ("
+									+ "'" + ttype + "'" + ","
 									+ amount + ","
-									+ ",DATE '" + currentDate + "',"
+									+ "DATE '" + dtf.format(now) + "',"
 									+ transactionId + ","
 								    + aid + ")";
 		Statement stmt;
 		try {
 			stmt = _connection.createStatement();
-			stmt.executeQuery(transactionQuery);
+			stmt.executeUpdate(transactionUpdate);
+
+			//two sided transaction
 			if(aid2!="-1") {
-				String twoSidedQuery = "INSERT INTO TwoSided(aid, tid) VALUES ("
+				String twoSidedUpdate = "INSERT INTO TwoSided(aid, tid) VALUES ("
 						+ aid2 + ","
 						+ transactionId + ")";
 
-				stmt.executeQuery(twoSidedQuery);
+				stmt.executeUpdate(twoSidedUpdate);
 			}
 			transactionId++;
 			return "0";
@@ -648,6 +649,7 @@ public class App implements Testable {
 	 * @param amount negative to subtract, positive to add
 	 * @return a string "r", where r=0 if success, 1 for error
 	 */
+	//good
 	public String editAccountBalance(String aid,double amount) {
 		Statement stmt;
 		ResultSet rs;
@@ -692,6 +694,7 @@ public class App implements Testable {
 	 * @param aid account id
 	 * @return account balance as a string, or "1" for error
 	 */
+	//good
 	public String getAccountBalance(String aid) {
 		Statement stmt;
 		ResultSet rs;
@@ -714,6 +717,7 @@ public class App implements Testable {
 	 * get account type
 	 * @return AccountType as a string, or "1" for error
 	 */
+	//good
 	public String getAccountType(String aid) {
 		Statement stmt;
 		ResultSet rs;
@@ -731,6 +735,8 @@ public class App implements Testable {
 			return "1";
 		}
 	}
+
+	///////////////////////////////////Populate Functions///////////////////////////////////////////////////////////////
 
 	public void populateCustomerData(){
 		String alfred = "INSERT INTO Customers (taxid, cname, address, pinkey) \n" +
