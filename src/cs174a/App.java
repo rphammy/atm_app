@@ -1395,21 +1395,50 @@ public class App implements Testable {
 	///////////////////////////////////Populate Functions///////////////////////////////////////////////////////////////
 
 	public void populateInitialTransactions(){
-			setDate(2011,03,01);
-			deposit("17431", 1200);
-			deposit("54321",21000);
-			deposit("12121",1200);
-			deposit( "41725", 15000);
-			deposit("93156",2000000);
-			topUp("53027", 50);
-			deposit("43942", 1289);
-			deposit("29107",34000);
-			deposit("19023",2300);
-			topUp("60413",20);
-			deposit("32156",1000);
-			deposit("76543",8456);
-			topUp("43947",30);
-			topUp("67521",100);
+		setDate(2011,03,01);
+
+		deposit("17431", 1200);
+		adjustInitialBalance("17431", 1200);
+
+		deposit("54321",21000);
+		adjustInitialBalance("54321", 21000);
+
+		deposit("12121",1200);
+		adjustInitialBalance("12121", 1200);
+
+		deposit( "41725", 15000);
+		adjustInitialBalance("41725", 15000);
+
+		deposit("93156",2000000);
+		adjustInitialBalance("93156", 2000000);
+
+		topUp("53027", 50);
+		adjustInitialBalance("53027", 50);
+
+		deposit("43942", 1289);
+		adjustInitialBalance("43942", 1289);
+
+		deposit("29107",34000);
+		adjustInitialBalance("29107", 34000);
+
+		deposit("19023",2300);
+		adjustInitialBalance("19023", 2300);
+
+		topUp("60413",20);
+		adjustInitialBalance("60413", 20);
+
+		deposit("32156",1000);
+		adjustInitialBalance("32156", 1000);
+
+		deposit("76543",8456);
+		adjustInitialBalance("76543", 8456);
+
+		topUp("43947",30);
+		adjustInitialBalance("43947", 30);
+
+		topUp("67521",100);
+		adjustInitialBalance("67521", 100);
+
 	}
 
 	public void populateOtherTransactions(){
@@ -1427,6 +1456,18 @@ public class App implements Testable {
 		withdrawal("93156",1000000);
 		writeCheck("93156",950000);
 
+	}
+
+	public void adjustInitialBalance(String aid, double initial) {
+		final String UPDATE = "UPDATE Transactions T SET T.before=" + initial + " WHERE T.aid=" + aid;
+		Statement stmt;
+		try{
+			stmt = _connection.createStatement();
+			stmt.executeUpdate(UPDATE);
+		}
+		catch(SQLException e) {
+			System.err.print(e.getMessage());
+		}
 	}
 
 	public void populateCustomerData(){
