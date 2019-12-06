@@ -32,6 +32,7 @@ public class Main
 		app.populateAccountData();
 		app.populateOwnersData();
 		app.populatePocketData();
+		app.populateInitialTransactions();
 
 		if( r.equals( "0" ) )
 		{
