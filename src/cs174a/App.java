@@ -27,7 +27,7 @@ public class App implements Testable {
 	private String bankName;
 	private int transactionId;
 	private boolean addedInterest;
-	private String currentCustomerTid;
+	public String currentCustomerTid;
 
 	/**
 	 * Default constructor.
@@ -259,6 +259,7 @@ public class App implements Testable {
 	 *         linkedNewBalance is the new balance of linked account, with up to 2 decimal places (e.g. with %.2f); and
 	 *         pocketNewBalance is the new balance of the pocket account.
 	 */
+	//good
 	@Override
 	public String topUp( String accountId, double amount ) {
 		Statement stmt;
@@ -457,12 +458,12 @@ public class App implements Testable {
 			// check that both accounts are pocket accounts
 			stmt=_connection.createStatement();
 			rs = stmt.executeQuery(fromQuery);
-			if(!rs.next() || rs.getString("atype")!="POCKET") {
+			if(!rs.next() || !rs.getString("atype").equals("POCKET")) {
 				System.out.print("Error: both accounts must be existing Pocket accounts");
 				return "1 "+fromNewBalance+" "+toNewBalance;
 			}
 			rs = stmt.executeQuery(toQuery);
-			if(!rs.next() || rs.getString("atype")!="POCKET") {
+			if(!rs.next() || !rs.getString("atype").equals("POCKET")) {
 				System.out.print("Error: both accounts must be existing Pocket accounts");
 				return "1 "+fromNewBalance+" "+toNewBalance;
 			}
@@ -526,6 +527,7 @@ public class App implements Testable {
 	 * Subtract to the checking or savings account balance
 	 * @return a string r = "0" for success, "1" for error
 	 */
+	//good
 	public String withdrawal(String aid, double amount) {
 		if(getAccountType(aid).equals("POCKET") || getAccountType(aid).equals("1")) {
 			return "1";
@@ -543,15 +545,15 @@ public class App implements Testable {
 	 * Subtract money from the pocket account balance
 	 * @return a string r="0" for success, "1" for error
 	 */
+	//good
 	public String purchase(String aid, double amount) {
 		String t = getAccountType(aid);
-		if(t!="POCKET") return "1";
+		if(!t.equals("POCKET")) return "1";
 		editAccountBalance(aid,amount*-1);
 		createTransaction("purchase",amount*-1,aid,"-1");
 		return "0";
 	}
 
-	// NEEDS TESTING
 	/**
 	 * Subtract money from one account w/ aid and add it to another account w/ aid2.
 	 * A transfer can only occur between two accounts that have at least one
@@ -560,34 +562,53 @@ public class App implements Testable {
 	 * @param aid checking or savings account
 	 * @param aid2 checking or savings account
 	 * @param amount amount to be transferred
+	 *
 	 * @return a string r="0" for success, "1" for error
 	 */
-	public String transfer(String aid, String aid2, double amount) {
+	//good
+	public String transfer(String aid, String aid2, double amount, boolean customer) {
 		// amount must be less than $2000
 		if(amount>2000) {
 			System.out.print("Error: cannot transfer more than $2000 in one transaction.");
 			return "1";
 		}
 		// both accounts must be checking/savings accounts
-		if(getAccountType(aid)=="POCKET" || getAccountType(aid2)=="POCKET") {
+		if(getAccountType(aid).equals("POCKET") || getAccountType(aid2).equals("POCKET")) {
 			System.out.print("Error: cannot perform a transfer with a pocket account.");
 			return "1";
 		}
 		// check that accounts have at least one owner in common
-		String query = "SELECT DISTINCT O.taxid " +
+		String CUSTOMER_AT_LEAST_ONE_OWNER = "SELECT DISTINCT O.taxid " +
 				       "FROM Owners O, Owners O2 " +
 				       "WHERE O.aid=" + aid +
-				 	   " AND O2.aid2=" + aid2 +
-				       " AND O.taxid=O2.taxid" +
+				 	   " AND O2.aid=" + aid2 +
+				       " AND O.taxid = O2.taxid" +
 					   " AND O.taxid=" + currentCustomerTid;
+
+		String AT_LEAST_ONE_OWNER
+				=
+				"SELECT DISTINCT O.taxid " +
+				"FROM Owners O, Owners O2 " +
+				"WHERE O.aid=" + aid +
+				" AND O2.aid=" + aid2 +
+				" AND O.taxid = O2.taxid";
+
 		Statement stmt;
 		ResultSet rs;
 		try {
 			stmt=_connection.createStatement();
-			rs = stmt.executeQuery(query);
-			if(!rs.next()) {
-				System.out.print("Error: must be owner of both accounts to perform a transfer.");
-				return "1";
+			if(customer){
+				rs = stmt.executeQuery(CUSTOMER_AT_LEAST_ONE_OWNER);
+				if(!rs.next()) {
+					System.out.print("Error: must be owner of both accounts and customer must be owner to perform a transfer.");
+					return "1";
+				}
+			} else {
+				rs = stmt.executeQuery(AT_LEAST_ONE_OWNER);
+				if(!rs.next()) {
+					System.out.print("Error: must be owner of both accounts to perform a transfer.");
+					return "1";
+				}
 			}
 		} catch(SQLException e) {
 			System.err.print(e.getMessage());
@@ -936,7 +957,7 @@ public class App implements Testable {
 			stmt = _connection.createStatement();
 			rs = stmt.executeQuery(query);
 			while(rs.next()){
-				accountType = rs.getString("atype");
+				accountType = rs.getString("atype").trim();
 			}
 			return accountType;
 		}catch(SQLException e){

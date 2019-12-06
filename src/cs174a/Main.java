@@ -39,9 +39,23 @@ public class Main
 			app.populateOwnersData();
 			app.populatePocketData();
 
-			app.editAccountBalance("12121", 30);
-			r = app.topUp("53027", 10);
+			app.editAccountBalance("93156", 30);
 			System.out.println(r);
+
+			app.editAccountBalance("32156", 30);
+			System.out.println(r);
+
+			app.currentCustomerTid = "12";
+			r = app.transfer("93156", "32156", 10, true);
+			System.out.println(r);
+
+			r = app.getAccountBalance("93156");
+			System.out.println("93156: " + r);
+
+			r = app.getAccountBalance("32156");
+			System.out.println("32156: " + r);
+
+
 //
 
 
