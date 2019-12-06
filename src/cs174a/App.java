@@ -181,7 +181,7 @@ public class App implements Testable {
 		}
 	}
 
-
+	// good
 	/**
 	 * Create a new customer and link them to an existing checking or saving account.
 	 * @param accountId Existing checking or saving account.
@@ -190,7 +190,6 @@ public class App implements Testable {
 	 * @param address New customer's address.
 	 * @return a string "r", where r = 0 for success, 1 for error.
 	 */
-	//good
 	@Override
 	public String createCustomer( String accountId, String tin, String name, String address ){
 		final String INSERT_CUSTOMER =
@@ -226,11 +225,10 @@ public class App implements Testable {
 			System.err.println(er.getMessage());
 			return "1";
 		}
-
 	}
+
 	/**
 	 * Set system's date.
-	 *
 	 * @param year  Valid 4-digit year, e.g. 2019.
 	 * @param month Valid month, where 1: January, ..., 12: December.
 	 * @param day   Valid day, from 1 to 31, depending on the month (and if it's a leap year).
@@ -248,8 +246,6 @@ public class App implements Testable {
 		}
 	}
 
-
-
 	/**
 	 * Move a specified amount of money from the linked checking/savings account to the pocket account.
 	 * @param accountId Pocket account ID.
@@ -266,21 +262,19 @@ public class App implements Testable {
 				"SELECT aid2 "
 				+ "FROM Pocket "
 				+ " WHERE aid=" + accountId;
-
 		double newPocketBalance = 0;
 		double newLinkedBalance = 0;
 		String linkedId = "";
-
 		try {
 			//query for the corresponding linked account using pocket account in pocket table
 			stmt = _connection.createStatement();
 
 			//get linked aid
 			ResultSet rs = stmt.executeQuery(LINKED_ACCOUNT_QUERY);
+
 			while(rs.next()) {
 				linkedId = Integer.toString(rs.getInt("aid2"));
 			}
-
 			//update balances
 			String r = editAccountBalance(accountId, amount);
 			if(r.equals("1")){
@@ -292,8 +286,9 @@ public class App implements Testable {
 				System.out.println("Cannot edit balance");
 				return "1 " +  newLinkedBalance + " " +  newPocketBalance;
 			}
-			//then update the corresponding balance for that checking/savings row in accounts table
-
+			// create Transaction
+			createTransaction("top-up",amount,linkedId,accountId);
+			// return
 			newPocketBalance = Double.parseDouble(getAccountBalance(accountId));
 			newLinkedBalance = Double.parseDouble(getAccountBalance(linkedId));
 			return "0 " + newLinkedBalance + " " +  newPocketBalance;
@@ -363,6 +358,7 @@ public class App implements Testable {
 		return "0"+ id + " " + accountType + " " + initialBalance + " " + tin;
 	}
 
+	// NEEDS TESTING
 	/**
 	 * Create a new pocket account.
 	 * @param id New account's ID.
@@ -378,6 +374,9 @@ public class App implements Testable {
 	 */
 	@Override
 	public String createPocketAccount( String id, String linkedId, double initialTopUp, String tin ) {
+		String createPocketAccount = "INSERT INTO Accounts(atype, status,bankname,balance,interest,aid,taxid) VALUES ("+
+									 "'POCKET','open',"+bankName+",0.0,0.0,"+id+","+tin+")";
+		topUp(id, initialTopUp);
 		return "0";
 	}
 
@@ -735,14 +734,18 @@ public class App implements Testable {
 
 	////////////////////////// Additional Bank Teller Functions ////////////////////////////////////////////////////////
 
+	// NEEDS TESTING
 	/**
 	 * Submit a check transaction for an account
 	 * @return a string r="0" for success, "1" for error
 	 */
 	public String enterCheckTransaction(String aid, double amount) {
-		return "0";
+		String r = writeCheck(aid, amount);
+		if(r.equals("0")) return "0";
+		return "1";
 	}
 
+	// not implemented
 	/**
 	 * Given a customer, do the following for each account she owns (including closed accounts):
 	 * (1) List names and addresses of all owners of the account.
@@ -757,6 +760,7 @@ public class App implements Testable {
 		return "0";
 	}
 
+	// not implemented
 	/**
 	 * Generate a list of all customers which have a sum of deposits, transfers, and wires
 	 * during the current month, over all owned accounts (active or closed) of over $10,000.
@@ -766,15 +770,44 @@ public class App implements Testable {
 		return "0";
 	}
 
+	// NEEDS TESTING
 	/**
 	 * Generate a list of all accounts associated with a particular customer and indicate
 	 * whether the accounts are open or closed
 	 * @return a string r="0" for success, "1" for error
 	 */
 	public String generateCustomerReport(String aid) {
-		return "0";
+		String customerReport = "";
+		String query = "SELECT A.aid, A.status" +
+					   "FROM Accounts A" +
+					   "WHERE A.aid IN" +
+					   "(SELECT O.aid FROM Owners O WHERE O.aid="+aid+")";
+		Statement stmt;
+		ResultSet rs;
+		int accId;
+		String status;
+		try{
+			stmt=_connection.createStatement();
+			rs=stmt.executeQuery(query);
+			while(!rs.next()) {
+				accId = rs.getInt("aid");
+				status = rs.getString("status");
+				customerReport+= accId+"         "+status+"\n";
+			}
+		}catch(SQLException e){
+			System.err.print(e.getMessage());
+			return "0";
+		}
+		if(customerReport.equals("")) {
+			System.out.print("This customer owns no accounts");
+			return "1";
+		}
+		customerReport = "account ID    status\n"+customerReport;
+		System.out.print(customerReport);
+		return "1";
 	}
 
+	// NEEDS TESTING
 	/**
 	 * For all open accounts, add the appropriate amount of monthly interest to the balance.
 	 * If interest has already been added for the month, report a warning.
@@ -782,27 +815,78 @@ public class App implements Testable {
 	 */
 	public String addInterest() {
 		if(addedInterest) {
-			// warning message
+			System.out.print("Error: Interest has already been added this month");
+			return "1";
+		}
+		String query = "SELECT A.aid FROM Accounts A WHERE A.status='open' AND A.atype<>'POCKET'";
+		Statement stmt;
+		ResultSet rs;
+		int aid;
+		try{
+			stmt = _connection.createStatement();
+			rs=stmt.executeQuery(query);
+			while(!rs.next()) {
+				aid = rs.getInt("aid");
+				accrueInterest(Integer.toString(aid));
+			}
+		}catch(SQLException e){
+			System.err.print(e.getMessage());
 			return "1";
 		}
 		return "0";
 	}
 
+	// NEEDS TESTING
 	/**
 	 * delete closed accounts and remove all customers who do not own any accounts
 	 * @return a string r="0" for success, "1" for error/warning
 	 */
 	public String deleteClosedAccounts(){
+		// delete closed accounts
+		String deletion = "DELETE FROM Accounts WHERE A.status='closed'";
+		Statement stmt;
+		try{
+			stmt=_connection.createStatement();
+			stmt.executeUpdate(deletion);
+		}catch(SQLException e){
+			System.err.print(e.getMessage());
+			return "1";
+		}
+		// find customers who do not own any accounts
+		ResultSet rs;
+		String query = "SELECT C.taxid FROM Customers C WHERE C.taxid NOT IN (SELECT O.taxid FROM Owners O)";
+		try{
+			stmt=_connection.createStatement();
+			rs=stmt.executeQuery(query);
+			while(!rs.next()) {
+				deletion = "DELETE FROM Customers C WHERE C.taxid="+Integer.toString(rs.getInt("taxid"));
+				stmt.executeUpdate(deletion);
+			}
+		}catch(SQLException e){
+			System.err.print(e.getMessage());
+			return "1";
+		}
 		return "0";
 	}
 
+	// NEEDS TESTING
 	/**
 	 * delete the list of transactions from each of the accounts in preparation of
 	 * a new month of processing.
 	 * @return a string r="0" for success, "1" for error/warning
 	 */
 	public String deleteTransactions() {
-		return "0";
+		String update = "DELETE FROM Transactions";
+		Statement stmt;
+		try{
+			stmt=_connection.createStatement();
+			stmt.executeUpdate(update);
+			transactionId=1;
+			return "0";
+		}catch(SQLException e){
+			System.err.print(e.getMessage());
+			return "1";
+		}
 	}
 
 	///////////////////////////////////// Helper Functions /////////////////////////////////////////////////////////////
