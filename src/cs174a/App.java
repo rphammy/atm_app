@@ -731,7 +731,7 @@ public class App implements Testable {
 	public String writeCheck(String aid, double amount) {
 		// check accountTypes
 		if(getAccountType(aid)!="STUDENT_CHECKING" && getAccountType(aid)!="INTEREST_CHECKING") {
-			System.out.print("Error: checks can only be written from checking accounts");
+			System.out.print("Error: checks can only be written from checking accounts\n");
 			return "1";
 		}
 		// edit account balance, create transaction
