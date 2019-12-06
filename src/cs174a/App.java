@@ -138,6 +138,8 @@ public class App implements Testable {
 						+ "tdate DATE,"
 						+ "tid INT,"
 						+ "aid INT,"
+						+ "before FLOAT,"
+						+ "after FLOAT,"
 						+ "PRIMARY KEY (tid),"
 						+ "FOREIGN KEY (aid) REFERENCES Accounts ON DELETE CASCADE)";
 
@@ -259,6 +261,7 @@ public class App implements Testable {
 	 *         pocketNewBalance is the new balance of the pocket account.
 	 */
 	//good
+	//TODO check if topup counts as a transaction for pocket?
 	@Override
 	public String topUp( String accountId, double amount ) {
 		Statement stmt;
@@ -268,6 +271,8 @@ public class App implements Testable {
 				+ " WHERE aid=" + accountId;
 		double newPocketBalance = 0;
 		double newLinkedBalance = 0;
+		double initPocketBalance = 0;
+		double initLinkedBalance = 0;
 		String linkedId = "";
 		try {
 			//query for the corresponding linked account using pocket account in pocket table
@@ -279,6 +284,10 @@ public class App implements Testable {
 			while(rs.next()) {
 				linkedId = Integer.toString(rs.getInt("aid2"));
 			}
+
+			//get initial balance
+			initLinkedBalance = Double.parseDouble(getAccountBalance(linkedId));
+
 			//update balances
 			String r = editAccountBalance(accountId, amount);
 			if(r.equals("1")){
@@ -291,7 +300,7 @@ public class App implements Testable {
 				return "1 " +  newLinkedBalance + " " +  newPocketBalance;
 			}
 			// create Transaction
-			createTransaction("top-up",amount,linkedId,accountId);
+			createTransaction("top-up",amount,linkedId,accountId, initLinkedBalance, newLinkedBalance);
 			// return
 			newPocketBalance = Double.parseDouble(getAccountBalance(accountId));
 			newLinkedBalance = Double.parseDouble(getAccountBalance(linkedId));
@@ -414,7 +423,7 @@ public class App implements Testable {
 	public String deposit( String accountId, double amount ) {
 		String t = getAccountType(accountId);
 		// check account type
-		if(t=="POCKET") {
+		if(t.equals("POCKET")) {
 			System.out.print("Transaction not valid on Pocket account");
 			return "1";
 		}
@@ -426,10 +435,9 @@ public class App implements Testable {
 
 		if(r.equals("1"))
 			return "1 " + oldBalance + " " + newBalance;
-
-		createTransaction("deposit", amount, accountId,"-1");
-
 		newBalance = getAccountBalance(accountId);
+		createTransaction("deposit", amount, accountId,"-1", Double.parseDouble(oldBalance), Double.parseDouble(newBalance));
+
 		return "0 " + oldBalance + " " + newBalance;
 	}
 
@@ -467,8 +475,9 @@ public class App implements Testable {
 		// check that from, to are pocket accounts
 		String FROM_TYPE_QUERY = "SELECT A.atype FROM Accounts A WHERE A.aid="+from;
 		String TO_TYPE_QUERY = "SELECT A.atype FROM Accounts A WHERE A.aid="+to;
-		String fromNewBalance=getAccountBalance(from);
-		String toNewBalance=getAccountBalance(to);
+		String fromNewBalance="";
+		double oldFromBalance =	Double.parseDouble(getAccountBalance(from));
+		String toNewBalance="";
 		Statement stmt;
 		ResultSet rs;
 		try{
@@ -498,7 +507,7 @@ public class App implements Testable {
 			toNewBalance = getAccountBalance(to);
 
 			// create Transaction
-			createTransaction("pay-friend", amount, from, to);
+			createTransaction("pay-friend", amount, from, to, oldFromBalance, Double.parseDouble(fromNewBalance));
 			return "0 "+fromNewBalance+" "+toNewBalance;
 		}catch(SQLException e) {
 			System.err.print(e.getMessage());
@@ -542,15 +551,21 @@ public class App implements Testable {
 	 */
 	//good
 	public String withdrawal(String aid, double amount) {
+		double initialBalance=0;
+		double newBalance=0;
 		if(getAccountType(aid).equals("POCKET") || getAccountType(aid).equals("1")) {
 			return "1";
 		}
+
+		initialBalance = Double.parseDouble(getAccountBalance(aid));
 		String r = editAccountBalance(aid, amount*-1);
 		if(r.equals("1")) {
 			System.out.print("Error: insufficient funds in account.");
 			return "1";
 		}
-		createTransaction("withdrawal",amount*-1,aid,"-1");
+
+		newBalance = Double.parseDouble(getAccountBalance(aid));
+		createTransaction("withdrawal",amount*-1,aid,"-1", initialBalance, newBalance);
 		return "0";
 	}
 
@@ -560,10 +575,16 @@ public class App implements Testable {
 	 */
 	//good
 	public String purchase(String aid, double amount) {
+		double initialBalance=0;
+		double newBalance=0;
+
+		initialBalance = Double.parseDouble(getAccountBalance(aid));
 		String t = getAccountType(aid);
 		if(!t.equals("POCKET")) return "1";
 		editAccountBalance(aid,amount*-1);
-		createTransaction("purchase",amount*-1,aid,"-1");
+
+		newBalance = Double.parseDouble(getAccountBalance(aid));
+		createTransaction("purchase",amount*-1,aid,"-1", initialBalance, newBalance);
 		return "0";
 	}
 
@@ -580,6 +601,8 @@ public class App implements Testable {
 	 */
 	//good
 	public String transfer(String aid, String aid2, double amount, boolean customer) {
+		double initialBalance=0;
+		double newBalance=0;
 		// amount must be less than $2000
 		if(amount>2000) {
 			System.out.print("Error: cannot transfer more than $2000 in one transaction.");
@@ -628,9 +651,13 @@ public class App implements Testable {
 			return "1";
 		}
 		// perform transfer
+		initialBalance = Double.parseDouble(getAccountBalance(aid));
+
 		editAccountBalance(aid, amount*-1);
 		editAccountBalance(aid2, amount);
-		createTransaction("transfer",amount,aid,aid2);
+
+		newBalance = Double.parseDouble(getAccountBalance(aid));
+		createTransaction("transfer",amount,aid,aid2, initialBalance, newBalance);
 		return "0";
 	}
 
@@ -647,7 +674,8 @@ public class App implements Testable {
 	public String collect(String aid, String aid2, double amount) {
 		Statement stmt;
 		ResultSet rs;
-		double fromBalance;
+		double fromInitBalance=0;
+		double fromNewbBalance=0;
 		double fee;
 		String checkLink = "SELECT P.aid FROM Pocket P WHERE P.aid="+aid+" AND P.aid2="+aid2;
 		// check account types
@@ -668,28 +696,31 @@ public class App implements Testable {
 			return "-1";
 		}
 		// update account balances and create transaction
+		fromInitBalance = Double.parseDouble(getAccountBalance(aid));
+
 		fee = 0.03 * amount;
 		editAccountBalance(aid,  - amount - fee);
-
-		String r = getAccountBalance(aid);
-		System.out.println("53027: " + r);
-
 		editAccountBalance(aid2, amount);
-		createTransaction("collect",amount,aid,aid2);
+
+		fromNewbBalance = Double.parseDouble(getAccountBalance(aid));
+		createTransaction("collect",amount,aid,aid2, fromInitBalance, fromNewbBalance);
 		return "0";
 	}
 
-	// NEEDS TESTING
 	/**
 	 * subtract money from account w aid and add it to another. The customer that
 	 * requests this action must be an owner of account w aid. There is a 2% fee
 	 * for this action.
 	 * @param aid savings or checking account
 	 * @param aid2 another checking or savings account
-	 * @param amount amount to be collected (incurs a 3% fee)
+	 * @param amount amount to be collected (incurs a 2% fee)
 	 * @return a string r="0" for success, "1" for error
 	 */
+	//good
 	public String wire(String aid, String aid2, double amount) {
+		double fromInitBalance = 0;
+		double fromNewBalance = 0;
+
 		// check that customer is owner of account with aid
 		String query = "SELECT O.taxid " +
 				"FROM Owners O " +
@@ -709,14 +740,18 @@ public class App implements Testable {
 			return "1";
 		}
 		// check account types
-		if(getAccountType(aid)=="POCKET" || getAccountType(aid2)=="POCKET") {
+		if(getAccountType(aid).equals("POCKET") || getAccountType(aid2).equals("POCKET")) {
 			System.out.print("Error: transaction must be between checking/savings accounts. ");
 			return "1";
 		}
 		// update account balances and create transaction
-		editAccountBalance(aid, -1*(amount+amount*0.2));
+		fromInitBalance = Double.parseDouble(getAccountBalance(aid));
+
+		editAccountBalance(aid, -1*(amount+amount*0.02));
 		editAccountBalance(aid2, amount);
-		createTransaction("wire",amount,aid,aid2);
+
+		fromNewBalance = Double.parseDouble(getAccountBalance(aid));
+		createTransaction("wire",amount,aid,aid2, fromInitBalance, fromNewBalance);
 		return "0";
 	}
 
@@ -728,17 +763,24 @@ public class App implements Testable {
 	 * @param amount amount
 	 * @return a string r="0" for success, "1" for error
 	 */
+	//good
 	public String writeCheck(String aid, double amount) {
+		double initBalance=0;
+		double newBalance=0;
 		// check accountTypes
-		if(getAccountType(aid)!="STUDENT_CHECKING" && getAccountType(aid)!="INTEREST_CHECKING") {
-			System.out.print("Error: checks can only be written from checking accounts\n");
+
+		if(!getAccountType(aid).equals("STUDENT_CHECKING") && !getAccountType(aid).equals("INTEREST_CHECKING")) {
+			System.out.print("Error: checks can only be written from checking accounts");
 			return "1";
 		}
 		// edit account balance, create transaction
-		editAccountBalance(aid, amount);
-		createTransaction("writeCheck",amount,aid,"-1");
+		initBalance = Double.parseDouble(getAccountBalance(aid));
+		editAccountBalance(aid, amount*-1);
+		newBalance = Double.parseDouble(getAccountBalance(aid));
+		createTransaction("writeCheck",amount,aid,"-1", initBalance, newBalance);
 		// update WriteCheck table
-		String update = "INSERT INTO WriteCheck(checkno, tid) VALUES ("+transactionId+","+transactionId+")";
+		int oldTransactionId = transactionId-1;
+		String update = "INSERT INTO WriteCheck(checkno, tid) VALUES ("+oldTransactionId+","+oldTransactionId+")";
 		Statement stmt;
 		try{
 			stmt=_connection.createStatement();
@@ -757,8 +799,9 @@ public class App implements Testable {
 	 * Interest is added at the end of each month.
 	 * @return a string r="0" for success, "1" for error
 	 */
+	//TODO AVERAGE DAILY BALANCE
 	public String accrueInterest(String aid) {
-		double balance = Double.valueOf(getAccountBalance(aid));
+		double balance = Double.parseDouble(getAccountBalance(aid));
 		double interest = getInterest(aid);
 		balance += balance*interest;
 		String update = "UPDATE Accounts" +
@@ -777,11 +820,18 @@ public class App implements Testable {
 
 	////////////////////////// Additional Bank Teller Functions ////////////////////////////////////////////////////////
 
+	//TODO
+//	public double averageDailyBalance(String aid){
+//
+//	}
+
+
 	// NEEDS TESTING
 	/**
 	 * Submit a check transaction for an account
 	 * @return a string r="0" for success, "1" for error
 	 */
+	//good
 	public String enterCheckTransaction(String aid, double amount) {
 		String r = writeCheck(aid, amount);
 		if(r.equals("0")) return "0";
@@ -802,12 +852,13 @@ public class App implements Testable {
 	public String generateMonthlyStatement(String taxId) {
 		System.out.println("Generating monthly statement...");
 		// Find each account associated with aid
-		String query = "SELECT A.aid FROM Accounts A WHERE A.aid IN (SELECT O.aid FROM Owners O WHERE O.taxid="+taxId;
+		String query = "SELECT A.aid FROM Accounts A WHERE A.aid IN (SELECT O.aid FROM Owners O WHERE O.taxid="+taxId + ")";
 		Statement stmt;
 		ResultSet rs;
 		ResultSet coOwners;
 		ResultSet transactions;
 		ResultSet initBal;
+		ResultSet primary;
 		String currentAid;
 		double totalFunds = 0.0;
 		double initialBalance=0.0;
@@ -815,39 +866,62 @@ public class App implements Testable {
 			stmt=_connection.createStatement();
 			rs=stmt.executeQuery(query);
 			while(rs.next()) {
-				currentAid=Integer.toString(rs.getInt("aid"));
-				System.out.println("ACCOUNT "+currentAid);
+				currentAid = Integer.toString(rs.getInt("aid"));
+				System.out.println("ACCOUNT " + currentAid);
 				// (1) List names and addresses of all owners
-				System.out.println("  Co-owners, Co-owner's Address");
-				query = "SELECT C.cname, C.address FROM Customers C WHERE C.taxid IN (SELECT O.taxid FROM Owners O WHERE O.aid="+currentAid+")";
-				coOwners =stmt.executeQuery(query);
-				while(coOwners.next()) {
-					System.out.println("    "+coOwners.getString("cname")+coOwners.getString("address"));
+				System.out.println("	Co-owners,		 Co-owner's Address");
+				query = "SELECT C.cname, C.address FROM Customers C WHERE C.taxid IN (SELECT O.taxid FROM Owners O WHERE O.aid=" + currentAid + ")";
+				Statement stmt2;
+				stmt2 = _connection.createStatement();
+
+				coOwners = stmt2.executeQuery(query);
+				while (coOwners.next()) {
+					System.out.println("	" + coOwners.getString("cname").trim() + "		" + coOwners.getString("address").trim());
 				}
+
 				// (2) List all transactions
-				query = "SELECT T.amount,T.ttype, T.date FROM Transactions T WHERE T.aid="+currentAid + "ORDER BY T.date ASC";
-				System.out.println("  Transactions (date   type   $amount");
-				transactions = stmt.executeQuery(query);
-				while(transactions.next()) {
-					System.out.println("    " + transactions.getDate("date") +
-											"   " + transactions.getString("ttype") +
-											"    $" + transactions.getDouble("amount"));
+				query = "SELECT T.amount,T.ttype, " + "T.tdate " +
+						"FROM Transactions T " +
+						"WHERE T.aid=" + currentAid +
+						" ORDER BY T.tdate ASC";
+				System.out.println("  Transactions (date   type   $amount)");
+
+				Statement stmt3;
+				stmt3 = _connection.createStatement();
+				transactions = stmt3.executeQuery(query);
+				while (transactions.next()) {
+					System.out.println("    " + transactions.getDate("tdate") +
+							"   " + transactions.getString("ttype").trim() +
+							"    $" + transactions.getDouble("amount"));
 				}
-				// (3) List initial and final account balance
-				query = "SELECT T.amount,T.ttype, T.date" +
+
+//				// (3) List initial and final account balance
+				query = "SELECT MIN (T.before)" +
 						" FROM Transactions T " +
 						"WHERE (T.aid="+currentAid + ") AND " +
-							  "(T.date= (SELECT MIN(T2.date) FROM Transactions T2)";
-				initBal = stmt.executeQuery(query);
+							  "(T.tdate= (SELECT MIN(T2.tdate) " +
+						"FROM Transactions T2))";
+				Statement stmt4;
+				stmt4 = _connection.createStatement();
+				initBal = stmt4.executeQuery(query);
 				while(initBal.next()){
-					initialBalance = initBal.getDouble("amount");
+					initialBalance = initBal.getDouble("MIN(T.BEFORE)");
 				}
 				System.out.println("  Initial balance");
 				System.out.println("    " + initialBalance);
 				System.out.println("  Final balance");
-				System.out.println("    " + getAccountBalance(rs.getString("aid")));
+				System.out.println("    " + getAccountBalance(currentAid));
 				System.out.println();
-				totalFunds+=Integer.parseInt(getAccountBalance(rs.getString("aid")));
+
+				//(3) check totalFunds
+				query = "SELECT A.aid\n" +
+						"FROM Accounts A\n" +
+						"WHERE A.taxid =" + taxId;
+				Statement stmt5 = _connection.createStatement();
+				primary = stmt5.executeQuery(query);
+				while(primary.next()){
+					totalFunds+=Double.parseDouble(getAccountBalance(primary.getString("aid")));
+				}
 			}
 			if(totalFunds>100000){
 				System.out.println("WARNING: You have reached the limit of insurance");
@@ -1011,15 +1085,17 @@ public class App implements Testable {
 	 * @return a string "r", where r=0 for success, 1 for error
 	 */
 	//good
-	public String createTransaction(String ttype, double amount, String aid, String aid2) {
+	public String createTransaction(String ttype, double amount, String aid, String aid2, double before, double after) {
 		SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd");
 
-		String transactionUpdate = "INSERT INTO Transactions(ttype, amount,tdate,tid,aid) VALUES ("
+		String transactionUpdate = "INSERT INTO Transactions(ttype, amount,tdate,tid,aid, before, after) VALUES ("
 									+ "'" + ttype + "'" + ","
 									+ amount + ","
 									+ "DATE '" + DATE_FORMAT.format(sysDate) + "',"
 									+ transactionId + ","
-								    + aid + ")";
+								    + aid + ","
+									+ before + ","
+									+ after + ")";
 
 		String FIRST_TRANSACTION = "SELECT * FROM Transactions T WHERE T.aid="+aid;
 		double feeBalance;
@@ -1155,11 +1231,11 @@ public class App implements Testable {
 		}
 	}
 
-	// NOT TESTED
 	/**
 	 * get interest rate for a given account
 	 * @return a double r = interest if success, 0.0 otherwise
 	 */
+	//good
 	public Double getInterest(String aid) {
 		Statement stmt;
 		ResultSet rs;
