@@ -26,8 +26,14 @@ public class Main
 		String r = app.initializeSystem();          // We'll always call this function before testing your system.
 		if( r.equals( "0" ) )
 		{
+			boolean runApp = true;
+			while(runApp) {
+				System.out.println();
+			}
+
 			// Our tests
 
+			/*
             r = app.dropTables();
 			System.out.println(r);
 
@@ -87,7 +93,7 @@ public class Main
 //
 //			// Our tests
 //			app.createCheckingSavingsAccount(AccountType.SAVINGS, "12345", 1500,"123456789","sasha","6835 Pasado Rd");
-//			System.out.println( r );
+//			System.out.println( r );  */
 
 		}
 	}
