@@ -296,7 +296,7 @@ public class App implements Testable {
 			}
 			String s = editAccountBalance(linkedId, amount*-1);
 			if(s.equals("1")){
-				System.out.println("Cannot edit balance");
+				System.out.println("Insufficient balance for this transaction.");
 				return "1 " +  newLinkedBalance + " " +  newPocketBalance;
 			}
 			// create Transaction
@@ -498,7 +498,7 @@ public class App implements Testable {
 			// edit account balances
 			String r = editAccountBalance(from, amount*-1);
 			if(r.equals("1")) {
-				System.out.print("Insufficient balance for this transaction.");
+				System.out.println("Insufficient balance for this transaction. ");
 				return "1 "+fromNewBalance+" "+toNewBalance;
 			}
 			editAccountBalance(to, amount);
@@ -560,7 +560,7 @@ public class App implements Testable {
 		initialBalance = Double.parseDouble(getAccountBalance(aid));
 		String r = editAccountBalance(aid, amount*-1);
 		if(r.equals("1")) {
-			System.out.print("Insufficient balance for this transaction.");
+			System.out.println("Insufficient balance for this transaction. ");
 			return "1";
 		}
 		newBalance = Double.parseDouble(getAccountBalance(aid));
@@ -583,7 +583,7 @@ public class App implements Testable {
 		String r;
 		r=editAccountBalance(aid,amount*-1);
 		if (r.equals("1")) {
-			System.out.print("Insufficient balance for this transaction.");
+			System.out.println("Insufficient balance for this transaction.");
 			return "1";
 		}
 		newBalance = Double.parseDouble(getAccountBalance(aid));
@@ -658,7 +658,7 @@ public class App implements Testable {
 		String r;
 		r=editAccountBalance(aid, amount*-1);
 		if (r.equals("1")) {
-			System.out.print("Insufficient balance for this transaction.");
+			System.out.println("Insufficient balance for this transaction.");
 			return "1";
 		}
 		editAccountBalance(aid2, amount);
@@ -708,7 +708,7 @@ public class App implements Testable {
 		String r;
 		r= editAccountBalance(aid,  - amount - fee);
 		if (r.equals("1")) {
-			System.out.print("Insufficient balance for this transaction.");
+			System.out.println("Insufficient balance for this transaction.");
 			return "1";
 		}
 		editAccountBalance(aid2, amount);
@@ -760,7 +760,7 @@ public class App implements Testable {
 		String r;
 		r=editAccountBalance(aid, -1*(amount+amount*0.02));
 		if (r.equals("1")) {
-			System.out.print("Insufficient balance for this transaction.");
+			System.out.println("Insufficient balance for this transaction.");
 			return "1";
 		}
 		editAccountBalance(aid2, amount);
@@ -793,7 +793,7 @@ public class App implements Testable {
 		String r;
 		r = editAccountBalance(aid, amount*-1);
 		if (r.equals("1")) {
-			System.out.print("Insufficient balance for this transaction.");
+			System.out.println("Insufficient balance for this transaction.");
 			return "1";
 		}
 		newBalance = Double.parseDouble(getAccountBalance(aid));
