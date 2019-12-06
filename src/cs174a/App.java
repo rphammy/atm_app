@@ -785,7 +785,7 @@ public class App implements Testable {
 		return "1";
 	}
 
-	// not implemented
+	// RLLY SHOULD B TESTED :0
 	/**
 	 * Given a customer, do the following for each account she owns (including closed accounts):
 	 * (1) List names and addresses of all owners of the account.
@@ -797,6 +797,59 @@ public class App implements Testable {
 	 * @return a string r="0" for success, "1" for error
 	 */
 	public String generateMonthlyStatement(String taxId) {
+		System.out.println("Generating monthly statement...");
+		// Find each account associated with aid
+		String query = "SELECT A.aid FROM Accounts A WHERE A.aid IN (SELECT O.aid FROM Owners O WHERE O.taxid="+taxId;
+		Statement stmt;
+		ResultSet rs;
+		ResultSet coOwners;
+		ResultSet transactions;
+		ResultSet initBal;
+		String currentAid;
+		double totalFunds = 0.0;
+		double initialBalance=0.0;
+		try {
+			stmt=_connection.createStatement();
+			rs=stmt.executeQuery(query);
+			while(rs.next()) {
+				currentAid=Integer.toString(rs.getInt("aid"));
+				System.out.println("ACCOUNT "+currentAid);
+				// (1) List names and addresses of all owners
+				System.out.println("  Co-owners, Co-owner's Address");
+				query = "SELECT C.cname, C.address FROM Customers C WHERE C.taxid IN (SELECT O.taxid FROM Owners O WHERE O.aid="+currentAid+")";
+				coOwners =stmt.executeQuery(query);
+				while(coOwners.next()) {
+					System.out.println("    "+coOwners.getString("cname")+coOwners.getString("address"));
+				}
+				// (2) List all transactions
+				query = "SELECT T.amount,T.ttype, T.date FROM Transactions T WHERE T.aid="+currentAid + "ORDER BY T.date ASC";
+				System.out.println("  Transactions (date   type   $amount");
+				transactions = stmt.executeQuery(query);
+				while(transactions.next()) {
+					System.out.println("    " + transactions.getDate("date") +
+											"   " + transactions.getString("ttype") +
+											"    $" + transactions.getDouble("amount"));
+				}
+				// (3) List initial and final account balance
+				query = "SELECT T.amount,T.ttype, T.date" +
+						" FROM Transactions T " +
+						"WHERE (T.aid="+currentAid + ") AND " +
+							  "(T.date= (SELECT MIN(T2.date) FROM Transactions T2)";
+				initBal = stmt.executeQuery(query);
+				while(initBal.next()){
+					initialBalance = initBal.getDouble("amount");
+				}
+				System.out.println("  Initial balance");
+				System.out.println("    " + initialBalance);
+				System.out.println("  Final balance");
+				System.out.println("    " + getAccountBalance(rs.getString("aid")));
+				System.out.println();
+				totalFunds+=Integer.valueOf(getAccountBalance(rs.getString("aid")));
+			}
+		}catch(SQLException e){
+			System.out.print(e.getMessage());
+			return "1";
+		}
 		return "0";
 	}
 
