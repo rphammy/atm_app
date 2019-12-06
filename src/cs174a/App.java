@@ -234,6 +234,7 @@ public class App implements Testable {
 	 * @param day   Valid day, from 1 to 31, depending on the month (and if it's a leap year).
 	 * @return a string "r yyyy-mm-dd", where r = 0 for success, 1 for error; and yyyy-mm-dd is the new system's date, e.g. 2012-09-16.
 	 */
+	//good
 	@Override
 	public String setDate(int year, int month, int day) {
 		SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd");
@@ -361,7 +362,6 @@ public class App implements Testable {
 		return "0"+ id + " " + accountType + " " + initialBalance + " " + tin;
 	}
 
-	// NEEDS TESTING
 	/**
 	 * Create a new pocket account.
 	 * @param id New account's ID.
@@ -461,54 +461,49 @@ public class App implements Testable {
 	 *         fromNewBalance is the new balance of the source pocket account, with up to 2 decimal places (e.g. with %.2f); and
 	 *         toNewBalance is the new balance of destination pocket account, with up to 2 decimal places.
 	 */
+	//good
 	@Override
 	public String payFriend( String from, String to, double amount ) {
 		// check that from, to are pocket accounts
-		String fromQuery = "SELECT A.atype FROM Accounts A WHERE A.aid="+from;
-		String toQuery = "SELECT A.atype FROM Accounts A WHERE A.aid="+to;
-		String firstTransaction = "SELECT * FROM Transaction T WHERE T.aid="+from;
+		String FROM_TYPE_QUERY = "SELECT A.atype FROM Accounts A WHERE A.aid="+from;
+		String TO_TYPE_QUERY = "SELECT A.atype FROM Accounts A WHERE A.aid="+to;
 		String fromNewBalance=getAccountBalance(from);
 		String toNewBalance=getAccountBalance(to);
 		Statement stmt;
 		ResultSet rs;
-		double feeAmount = amount;
 		try{
 			// check that both accounts are pocket accounts
 			stmt=_connection.createStatement();
-			rs = stmt.executeQuery(fromQuery);
-			if(!rs.next() || !rs.getString("atype").equals("POCKET")) {
-				System.out.print("Error: both accounts must be existing Pocket accounts");
+			rs = stmt.executeQuery(FROM_TYPE_QUERY);
+			if(!rs.next() || !rs.getString("atype").trim().equals("POCKET")) {
+				System.out.println("Error: both accounts must be existing Pocket accounts");
 				return "1 "+fromNewBalance+" "+toNewBalance;
 			}
-			rs = stmt.executeQuery(toQuery);
-			if(!rs.next() || !rs.getString("atype").equals("POCKET")) {
-				System.out.print("Error: both accounts must be existing Pocket accounts");
+
+			rs = stmt.executeQuery(TO_TYPE_QUERY);
+			if(!rs.next() || !rs.getString("atype").trim().equals("POCKET")) {
+				System.out.println("Error: both accounts must be existing Pocket accounts");
 				return "1 "+fromNewBalance+" "+toNewBalance;
 			}
-			// the first transaction of the month incurs a $5 fee
-			rs = stmt.executeQuery(firstTransaction);
-			if(!rs.next()) {
-				feeAmount = amount-5.0;
-			}
+
 			// edit account balances
-			String r = editAccountBalance(from, feeAmount*-1);
+			String r = editAccountBalance(from, amount*-1);
 			if(r.equals("1")) {
 				System.out.print("Error: insufficient funds in account.");
 				return "1 "+fromNewBalance+" "+toNewBalance;
 			}
-			editAccountBalance(to, feeAmount);
+			editAccountBalance(to, amount);
 
 			fromNewBalance = getAccountBalance(from);
 			toNewBalance = getAccountBalance(to);
 
 			// create Transaction
 			createTransaction("pay-friend", amount, from, to);
-
+			return "0 "+fromNewBalance+" "+toNewBalance;
 		}catch(SQLException e) {
 			System.err.print(e.getMessage());
 			return "1 "+fromNewBalance+" "+toNewBalance;
 		}
-		return "0 "+fromNewBalance+" "+toNewBalance;
 	}
 
 	/**
@@ -648,12 +643,15 @@ public class App implements Testable {
 	 * @param amount amount to be collected (incurs 3% fee)
 	 * @return a string r="0" for success, "1" for error
 	 */
+	//collect
 	public String collect(String aid, String aid2, double amount) {
 		Statement stmt;
 		ResultSet rs;
+		double fromBalance;
+		double fee;
 		String checkLink = "SELECT P.aid FROM Pocket P WHERE P.aid="+aid+" AND P.aid2="+aid2;
 		// check account types
-		if(getAccountType(aid)!="POCKET" || getAccountType(aid2)=="POCKET") {
+		if(!getAccountType(aid).equals("POCKET") || getAccountType(aid2).equals("POCKET")) {
 			System.out.print("Error: transaction must be between a pocket account and it's linked checking or savings account. ");
 			return "1";
 		}
@@ -670,7 +668,12 @@ public class App implements Testable {
 			return "-1";
 		}
 		// update account balances and create transaction
-		editAccountBalance(aid, -1*(amount+amount*0.3));
+		fee = 0.03 * amount;
+		editAccountBalance(aid,  - amount - fee);
+
+		String r = getAccountBalance(aid);
+		System.out.println("53027: " + r);
+
 		editAccountBalance(aid2, amount);
 		createTransaction("collect",amount,aid,aid2);
 		return "0";
@@ -950,9 +953,28 @@ public class App implements Testable {
 									+ "DATE '" + DATE_FORMAT.format(sysDate) + "',"
 									+ transactionId + ","
 								    + aid + ")";
+
+		String FIRST_TRANSACTION = "SELECT * FROM Transactions T WHERE T.aid="+aid;
+		double feeBalance;
+		double pocketBalance;
 		Statement stmt;
+		ResultSet rs;
 		try {
 			stmt = _connection.createStatement();
+
+			// if a pocketaccountthe first transaction of the month incurs a $5 fee
+			if(getAccountType(aid).equals("POCKET")){
+				rs = stmt.executeQuery(FIRST_TRANSACTION);
+				if(!rs.next()){
+					pocketBalance = Double.parseDouble(getAccountBalance(aid));
+					feeBalance = pocketBalance-5.0;
+					String UPDATE_FEE = "UPDATE Accounts " +
+							"SET balance = " + feeBalance +
+							" WHERE aid = " + aid;
+					stmt.executeUpdate(UPDATE_FEE);
+				}
+			}
+
 			stmt.executeUpdate(transactionUpdate);
 
 			//two sided transaction
@@ -991,7 +1013,7 @@ public class App implements Testable {
 			stmt = _connection.createStatement();
 			rs = stmt.executeQuery(findAccountQuery);
 			while(rs.next()){
-				balance = rs.getInt("balance");
+				balance = rs.getDouble("balance");
 			}
 			balance += amount;
 			if (balance < 0) {
