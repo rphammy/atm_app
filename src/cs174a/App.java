@@ -661,7 +661,6 @@ public class App implements Testable {
 		return "0";
 	}
 
-	// NEEDS TESTING
 	/**
 	 * Move amount of money from account w/ aid back to linked account w/ aid2.
 	 * There is a 3% fee for this action.
@@ -670,7 +669,7 @@ public class App implements Testable {
 	 * @param amount amount to be collected (incurs 3% fee)
 	 * @return a string r="0" for success, "1" for error
 	 */
-	//collect
+	//good
 	public String collect(String aid, String aid2, double amount) {
 		Statement stmt;
 		ResultSet rs;
@@ -826,7 +825,6 @@ public class App implements Testable {
 //	}
 
 
-	// NEEDS TESTING
 	/**
 	 * Submit a check transaction for an account
 	 * @return a string r="0" for success, "1" for error
@@ -838,7 +836,6 @@ public class App implements Testable {
 		return "1";
 	}
 
-	// RLLY SHOULD B TESTED :0
 	/**
 	 * Given a customer, do the following for each account she owns (including closed accounts):
 	 * (1) List names and addresses of all owners of the account.
@@ -849,6 +846,7 @@ public class App implements Testable {
 	 * @param taxId customer's taxId
 	 * @return a string r="0" for success, "1" for error
 	 */
+	//good :')
 	public String generateMonthlyStatement(String taxId) {
 		System.out.println("Generating monthly statement...");
 		// Find each account associated with aid
@@ -954,18 +952,18 @@ public class App implements Testable {
 		return "0";
 	}
 
-	// NEEDS TESTING
 	/**
 	 * Generate a list of all accounts associated with a particular customer and indicate
 	 * whether the accounts are open or closed
 	 * @return a string r="0" for success, "1" for error
 	 */
-	public String generateCustomerReport(String aid) {
+	//good
+	public String generateCustomerReport(String tid) {
 		String customerReport = "";
-		String query = "SELECT A.aid, A.status" +
-					   "FROM Accounts A" +
-					   "WHERE A.aid IN" +
-					   "(SELECT O.aid FROM Owners O WHERE O.aid="+aid+")";
+		String query = "SELECT A.aid, A.status " +
+					   "FROM Accounts A " +
+					   "WHERE A.aid IN " +
+					   "(SELECT O.aid FROM Owners O WHERE O.taxid="+tid+")";
 		Statement stmt;
 		ResultSet rs;
 		int accId;
@@ -973,10 +971,10 @@ public class App implements Testable {
 		try{
 			stmt=_connection.createStatement();
 			rs=stmt.executeQuery(query);
-			while(!rs.next()) {
+			while(rs.next()) {
 				accId = rs.getInt("aid");
 				status = rs.getString("status");
-				customerReport+= accId+"         "+status+"\n";
+				customerReport = customerReport.concat(accId+"         "+status+"\n");
 			}
 		}catch(SQLException e){
 			System.err.print(e.getMessage());
