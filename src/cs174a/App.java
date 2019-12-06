@@ -23,7 +23,7 @@ import javax.xml.transform.Result;
  */
 public class App implements Testable {
 	private OracleConnection _connection;                   // Example connection object to your DB.
-	private Date sysDate;
+	public Date sysDate;
 	private String bankName;
 	private int transactionId;
 	private boolean addedInterest;
@@ -236,13 +236,15 @@ public class App implements Testable {
 	 */
 	@Override
 	public String setDate(int year, int month, int day) {
-		String newDate = year + "-" + month + "-" + day;
+		SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd");
+		String stringDate = "";
 		try {
 			sysDate = new Date(year, month, day);
-			return "0 " + newDate;
+			stringDate = DATE_FORMAT.format(sysDate);
+			return "0 " + stringDate;
 		} catch (Exception e) {
 			System.err.println(e.getMessage());
-			return "1 " + newDate;
+			return "1 " + stringDate;
 		}
 	}
 
@@ -373,12 +375,29 @@ public class App implements Testable {
 	 *         balance is the account's initial balance with up to 2 decimal places (e.g. 1000.12, as with %.2f); and
 	 *         tin is the Tax ID of account's primary owner.
 	 */
+	//good
 	@Override
 	public String createPocketAccount( String id, String linkedId, double initialTopUp, String tin ) {
-		String createPocketAccount = "INSERT INTO Accounts(atype, status,bankname,balance,interest,aid,taxid) VALUES ("+
-									 "'POCKET','open',"+bankName+",0.0,0.0,"+id+","+tin+")";
-		topUp(id, initialTopUp);
-		return "0";
+		String INSERT_ACCOUNTS = "INSERT INTO Accounts(atype, status,bankname,balance,interest,aid,taxid) VALUES ("+
+									 "'POCKET','open',"+ "'" + bankName+"'" + ",0.0,0.0,"+id+","+tin+")";
+		String INSERT_POCKET = "INSERT INTO Pocket(aid, aid2) \n" +
+				"VALUES("+ id +"," + linkedId + ")";
+
+		Statement stmt;
+		String balance = "";
+		try{
+			stmt =  _connection.createStatement();
+			stmt.executeUpdate(INSERT_ACCOUNTS);
+			stmt.executeUpdate(INSERT_POCKET);
+
+			String r = topUp(id, initialTopUp);
+			balance = getAccountBalance(id);
+			return "0 " + id + " POCKET " + balance + " " + tin;
+		}
+		catch(SQLException e){
+			System.err.print(e.getMessage());
+			return "0 " + id + " POCKET " + balance + " " + tin;
+		}
 	}
 
 	/**
@@ -923,15 +942,12 @@ public class App implements Testable {
 	 */
 	//good
 	public String createTransaction(String ttype, double amount, String aid, String aid2) {
-		DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy-MM-dd");
-//		SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd");
-//		String currentDate = formatter.format(java.time.LocalDate.now());
-		LocalDateTime now = LocalDateTime.now();
+		SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd");
 
 		String transactionUpdate = "INSERT INTO Transactions(ttype, amount,tdate,tid,aid) VALUES ("
 									+ "'" + ttype + "'" + ","
 									+ amount + ","
-									+ "DATE '" + dtf.format(now) + "',"
+									+ "DATE '" + DATE_FORMAT.format(sysDate) + "',"
 									+ transactionId + ","
 								    + aid + ")";
 		Statement stmt;
