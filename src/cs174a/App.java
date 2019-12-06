@@ -24,6 +24,7 @@ public class App implements Testable {
 	private Date sysDate;
 	private String bankName;
 	private int transactionId;
+	private boolean addedInterest;
 
 	/**
 	 * Default constructor.
@@ -515,6 +516,32 @@ public class App implements Testable {
 		}
 	}
 
+	///////////////////////////////////// Additional Transaction Functions /////////////////////////////////////////////
+	/**
+	 * Subtract to the checking or savings account balance
+	 * @return a string r = "0" for success, "1" for error
+	 */
+	public String withdrawal(String aid, double amount) {
+		if(getAccountType(aid)=="POCKET" || getAccountType(aid)=="1") {
+			return "1";
+		}
+		editAccountBalance(aid, amount*-1);
+		createTransaction("withdrawal",amount*-1,aid,"-1");
+		return "0";
+	}
+
+	/**
+	 * Subtract money from the pocket account balance
+	 * @return a string r="0" for success, "1" for error
+	 */
+	public String purchase(String aid, double amount) {
+		String t = getAccountType(aid);
+		if(t!="POCKET") return "1";
+		editAccountBalance(aid,amount*-1);
+		createTransaction("purchase",amount*-1,aid,"-1");
+		return "0";
+	}
+
 	/**
 	 * Subtract money from one account w/ aid and add it to another account w/ aid2.
 	 * A transfer can only occur between two accounts that have at least one
@@ -525,7 +552,7 @@ public class App implements Testable {
 	 * @param amount amount to be transferred
 	 * @return a string r="0" for success, "1" for error
 	 */
-	String transfer(String aid, String aid2, double amount) {
+	public String transfer(String aid, String aid2, double amount) {
 		return "0";
 	}
 
@@ -537,7 +564,7 @@ public class App implements Testable {
 	 * @param amount amount to be collected (incurs 3% fee)
 	 * @return a string r="0" for success, "1" for error
 	 */
-	String collect(String aid, String aid2, double amount) {
+	public String collect(String aid, String aid2, double amount) {
 		return "0";
 	}
 
@@ -550,7 +577,7 @@ public class App implements Testable {
 	 * @param amount amount to be collected (incurs a 3% fee)
 	 * @return a string r="0" for success, "1" for error
 	 */
-	String wire(String aid, String aid2, double amount) {
+	public String wire(String aid, String aid2, double amount) {
 		return "0";
 	}
 
@@ -561,7 +588,7 @@ public class App implements Testable {
 	 * @param amount amount
 	 * @return a string r="0" for success, "1" for error
 	 */
-	String writeCheck(String aid, double amount) {
+	public String writeCheck(String aid, double amount) {
 		return "0";
 	}
 
@@ -571,9 +598,84 @@ public class App implements Testable {
 	 * Interest is added at the end of each month.
 	 * @return a string r="0" for success, "1" for error
 	 */
-	String accrueInterest() {
+	public String accrueInterest() {
 		return "0";
 	}
+
+	////////////////////////// Additional Bank Teller Functions ////////////////////////////////////////////////////////
+
+	/**
+	 * Submit a check transaction for an account
+	 * @return a string r="0" for success, "1" for error
+	 */
+	public String enterCheckTransaction(String aid, double amount) {
+		return "0";
+	}
+
+	/**
+	 * Given a customer, do the following for each account she owns (including closed accounts):
+	 * (1) List names and addresses of all owners of the account.
+	 * (2) generate a list of all transactions which have occurred in the last month.
+	 * (3) List initial and final account balance.
+	 * (4) If the sum of the balances of the accounts of which the customer is the primary owner
+	 *     exceeds $100,000, include a warning that the limit of insurance has been reached.
+	 * @param taxId customer's taxId
+	 * @return a string r="0" for success, "1" for error
+	 */
+	public String generateMonthlyStatement(String taxId) {
+		return "0";
+	}
+
+	/**
+	 * Generate a list of all customers which have a sum of deposits, transfers, and wires
+	 * during the current month, over all owned accounts (active or closed) of over $10,000.
+	 * @return a string r="0" for success, "1" for error
+	 */
+	public String generateDTER() {
+		return "0";
+	}
+
+	/**
+	 * Generate a list of all accounts associated with a particular customer and indicate
+	 * whether the accounts are open or closed
+	 * @return a string r="0" for success, "1" for error
+	 */
+	public String generateCustomerReport(String aid) {
+		return "0";
+	}
+
+	/**
+	 * For all open accounts, add the appropriate amount of monthly interest to the balance.
+	 * If interest has already been added for the month, report a warning.
+	 * @return a string r="0" for success, "1" for error/warning
+	 */
+	public String addInterest() {
+		if(addedInterest) {
+			// warning message
+			return "1";
+		}
+		return "0";
+	}
+
+	/**
+	 * delete closed accounts and remove all customers who do not own any accounts
+	 * @return a string r="0" for success, "1" for error/warning
+	 */
+	public String deleteClosedAccounts(){
+		return "0";
+	}
+
+	/**
+	 * delete the list of transactions from each of the accounts in preparation of
+	 * a new month of processing.
+	 * @return a string r="0" for success, "1" for error/warning
+	 */
+	public String deleteTransactions() {
+		return "0";
+	}
+
+	///////////////////////////////////// Helper Functions /////////////////////////////////////////////////////////////
+
 
 	/**
 	 * Add Transactions entry and TwoSided entry (if needed) to db
@@ -610,35 +712,6 @@ public class App implements Testable {
 			return "1";
 		}
 	}
-
-	/**
-	 * Subtract to the checking or savings account balance
-	 * @return a string r = "0" for success, "1" for error
-	 */
-	public String withdrawal(String aid, double amount) {
-		if(getAccountType(aid)=="POCKET" || getAccountType(aid)=="1") {
-			return "1";
-		}
-		editAccountBalance(aid, amount*-1);
-		createTransaction("withdrawal",amount*-1,aid,"-1");
-		return "0";
-	}
-
-	/**
-	 * Subtract money from the pocket account balance
-	 * @return a string r="0" for success, "1" for error
-	 */
-	public String purchase(String aid, double amount) {
-		String t = getAccountType(aid);
-		if(t!="POCKET") return "1";
-		editAccountBalance(aid,amount*-1);
-		createTransaction("purchase",amount*-1,aid,"-1");
-		return "0";
-	}
-
-	//@Override
-	//public String
-
 
 	/**
 	 * Add or subtract a given amount from account balance
@@ -731,6 +804,8 @@ public class App implements Testable {
 			return "1";
 		}
 	}
+
+	////////////////////////////////// functions to populate database with test data ///////////////////////////////////
 
 	public void populateCustomerData(){
 		String alfred = "INSERT INTO Customers (taxid, cname, address, pinkey) \n" +
