@@ -26,26 +26,34 @@ public class Main
 		String r = app.initializeSystem();          // We'll always call this function before testing your system.
 		if( r.equals( "0" ) )
 		{
-			app.exampleAccessToDB();                // Example on how to connect to the DB.
-
-			// Example tests.  We'll overwrite your Main.main() function with our final tests.
-			r = app.listClosedAccounts();
-			System.out.println( r );
-
-			// Another example test.
-
 			// Our tests
-//            r = app.topUp("53027", 10.0);
-//            System.out.println(r);
 
-            r = app.dropTables();
+//            r = app.dropTables();
+//			System.out.println(r);
+//
+//            r = app.createTables();
+//			System.out.println(r);
+//
+//			app.populateCustomerData();
+//			app.populateAccountData();
+//			app.populateOwnersData();
+//			app.populatePocketData();
+//
+//			r = app.deposit("17431", 10);
+//			System.out.println(r);
+//
+//			r = app.deposit("17431", 10);
+//			System.out.println(r);
+
+			r = app.createCheckingSavingsAccount(AccountType.INTEREST_CHECKING, "11111", 20.0, "361721022", "Alfred Hitchcock", "6667 El Colegio #40");
 			System.out.println(r);
-            r = app.createTables();
-			System.out.println(r);
-			app.populateCustomerData();
-			app.populateAccountData();
-			app.populateOwnersData();
-			app.populatePocketData();
+
+
+//			r = app.createTransaction("INTEREST_CHECKING", 10, "17431", "-1");
+//			System.out.println(r);
+
+
+
 //			r = app.createCheckingSavingsAccount( AccountType.INTEREST_CHECKING, "34567", 1234.56, "1928304", "Im YoungMing", "Known" );
 //			System.out.println( r );
 //
