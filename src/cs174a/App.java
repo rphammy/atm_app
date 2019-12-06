@@ -1394,6 +1394,41 @@ public class App implements Testable {
 
 	///////////////////////////////////Populate Functions///////////////////////////////////////////////////////////////
 
+	public void populateInitialTransactions(){
+			setDate(2011,03,01);
+			deposit("17431", 1200);
+			deposit("54321",21000);
+			deposit("12121",1200);
+			deposit( "41725", 15000);
+			deposit("93156",2000000);
+			topUp("53027", 50);
+			deposit("43942", 1289);
+			deposit("29107",34000);
+			deposit("19023",2300);
+			topUp("60413",20);
+			deposit("32156",1000);
+			deposit("76543",8456);
+			topUp("43947",30);
+			topUp("67521",100);
+	}
+
+	public void populateOtherTransactions(){
+		setDate(2011,3,2);
+		deposit("17431",8800);
+
+		setDate(2011,3,2);
+		withdrawal("54321",3000);
+
+		setDate(2011,3,5);
+		withdrawal("76543",2000);
+		purchase("53027",5);
+
+		setDate(2011,3,6);
+		withdrawal("93156",1000000);
+		writeCheck("93156",950000);
+
+	}
+
 	public void populateCustomerData(){
 		String alfred = "INSERT INTO Customers (taxid, cname, address, pinkey) \n" +
 				"VALUES (361721022, 'Alfred Hitchcock', '6667 El Colegio #40',"+hashPin(1234)+")";
