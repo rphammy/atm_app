@@ -768,6 +768,7 @@ public class App implements Testable {
 		double initBalance=0;
 		double newBalance=0;
 		// check accountTypes
+
 		if(!getAccountType(aid).equals("STUDENT_CHECKING") && !getAccountType(aid).equals("INTEREST_CHECKING")) {
 			System.out.print("Error: checks can only be written from checking accounts");
 			return "1";
