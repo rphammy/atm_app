@@ -1426,7 +1426,35 @@ public class App implements Testable {
 		setDate(2011,3,6);
 		withdrawal("93156",1000000);
 		writeCheck("93156",950000);
+		withdrawal("29107",4000);
+		collect("43947","29107",10);
+		topUp("43947",30);
 
+		setDate(2011,3,7);
+		transfer("43942","17431",289, true);
+		withdrawal("43942",289);
+
+		setDate(2011,3,8);
+		payFriend("60413","67521",10);
+		deposit("93156",50000);
+		writeCheck("12121",200);
+		transfer("41725","19023",1000,true);
+
+		setDate(2011,3,9);
+		wire("41725","32156",4000);
+		payFriend("53027","60413",10);
+
+		setDate(2011,3,10);
+		purchase("60413",15);
+
+		setDate(2011,3,12);
+		withdrawal("93156",20000);
+		writeCheck("76543", 456);
+		topUp("67521",50);
+
+		setDate(2011,3,14);
+		payFriend("67521","53027",20);
+		collect("43947","29107",15);
 	}
 
 	public void populateCustomerData(){
