@@ -35,223 +35,226 @@ public class Main
 
 		if( r.equals( "0" ) )
 		{
-			Scanner scanner = new Scanner(System.in);
-			boolean runApp = true;
-			while(runApp) {
-
-				System.out.println("---------HOME PAGE---------\n" +
-							       "Choose one of the following:\n" +
-							       "0 Bank Teller\n" +
-								   "1 Customer ATM\n" +
-						           "2 Set System Date\n" +
-								   "3 Exit Program");
-
-				String initialChoice = scanner.nextLine();
-				switch(initialChoice) {
-
-					// bank teller
-					case "0":
-						boolean bankTelling = true;
-						while(bankTelling) {
-							System.out.println("Choose one of the following:\n" +
-									"0 Enter Check Transaction\n" +
-									"1 Generate Monthly Statement\n" +
-									"2 List Closed Accounts\n" +
-									"3 Generate Government DTER\n" +
-									"4 Customer Report\n" +
-									"5 Add interest\n" +
-									"6 Create Account\n" +
-									"7 Delete Closed Accounts and Customers\n" +
-									"8 Delete Transactions\n" +
-									"9 GO BACK TO HOME PAGE");
-							String bankTellerChoice = scanner.nextLine();
-							String accountId = "";
-							switch (bankTellerChoice) {
-								// writeCheck
-								case "0":
-									System.out.println("To enter a check transaction, enter checking account number and amount on check on separate lines:");
-									accountId = scanner.nextLine();
-									double amount = Double.parseDouble(scanner.nextLine());
-									r = app.writeCheck(accountId, amount);
-									if (r.equals("1")) {
-										System.out.println("Check transaction failed");
-									} else {
-										System.out.println("Successfully entered transaction");
-									}
-									break;
-								// genMonthlyStatement
-								case "1":
-									System.out.println("To generate customer report, enter account id:");
-									accountId = scanner.nextLine();
-									app.generateMonthlyStatement(accountId);
-									break;
-								// listClosedAccounts
-								case "2":
-									System.out.println("Account IDs of closed accounts");
-									String str[] = app.listClosedAccounts().split(" ");
-									if (str[0].equals("0")) {
-										for (int i = 1; i < str.length; i++) {
-											System.out.println(str[i]);
-										}
-									} else {
-										System.out.println("Listing closed accounts failed");
-									}
-									break;
-								// genGovDTER
-								case "3":
-									break;
-								// genCustomerReport
-								case "4":
-									System.out.println("To generate customer report, enter account id:");
-									accountId = scanner.nextLine();
-									app.generateCustomerReport(accountId);
-									break;
-								// addInterest
-								case "5":
-									break;
-								// createAccount
-								case "6":
-									boolean choosingType = true;
-									System.out.println("Choose account type to create:\n" +
-											"0 Student Checking\n" +
-											"1 Interest Checking\n" +
-											"2 Savings\n" +
-											"3 Pocket");
-									String choice = scanner.nextLine();
-									String id;
-									String linkedId = "";
-									double initialTopUp;
-									double initialBalance;
-									String tin;
-									String name = "";
-									String address = "";
-									AccountType aType = null;
-									switch (choice) {
-										case "0":
-											aType = AccountType.STUDENT_CHECKING;
-											break;
-										case "1":
-											aType = AccountType.INTEREST_CHECKING;
-											break;
-										case "2":
-											aType = AccountType.SAVINGS;
-											break;
-										case "3":
-											aType = AccountType.POCKET;
-											break;
-										default:
-											break;
-										break;
-									}
-									if (aType != AccountType.POCKET) {
-										System.out.println("Enter new account ID:");
-										id = scanner.nextLine();
-										System.out.println("Enter initial balance:");
-										initialBalance = Double.parseDouble(scanner.nextLine());
-										System.out.println("Enter customer taxid:");
-										tin = scanner.nextLine();
-										System.out.println("For existing customer, press enter to create account," +
-												"For new customer, enter name, address on separate lines:");
-										name = scanner.nextLine();
-										address = scanner.nextLine();
-										app.createCheckingSavingsAccount(aType, id, initialBalance, tin, name, address);
-									} else if (aType.equals(AccountType.POCKET)) {
-										System.out.println("Enter new pocket account ID:");
-										id = scanner.nextLine();
-										System.out.println("Enter checking/savings account ID to link to:");
-										linkedId = scanner.nextLine();
-										System.out.println("Enter initial top-up amount:");
-										initialTopUp = Double.parseDouble(scanner.nextLine());
-										System.out.println("Enter customer taxid:");
-										tin = scanner.nextLine();
-										app.createPocketAccount(id, linkedId, initialTopUp, tin);
-									}
-									break;
-								// delete closed accounts
-								case "7":
-									System.out.println("deleting closed accounts...");
-									r = app.deleteClosedAccounts();
-									if (r.equals("0")) {
-										System.out.println("closed accounts deleted.");
-										break;
-										// delete transactions
-										case "8":
-											break;
-										// go to home page
-										case "9":
-											bankTelling = false;
-											break;
-										default:
-											System.out.println("Must choose between choices 0-9\n");
-											break;
-									}
-							}
-							break;
-
-							// customer atm
-							case "1":
-								boolean usingATM = true;
-								while (usingATM) {
-									System.out.println("Choose one of the following:\n" +
-											"0 Deposit\n" +
-											"1 Top-Up\n" +
-											"2 Withdrawal\n" +
-											"3 Purchase\n" +
-											"4 Transfer\n" +
-											"5 Collect\n" +
-											"6 Pay-Friend\n" +
-											"7 Wire\n" +
-											"8 LOG OUT AND GO BACK TO HOME PAGE");
-									String customerChoice = scanner.nextLine();
-									switch (customerChoice) {
-										case "0":
-											break;
-										case "1":
-											break;
-										case "2":
-											break;
-										case "3":
-											break;
-										case "4":
-											break;
-										case "5":
-											break;
-										case "6":
-											break;
-										case "7":
-											break;
-										case "8":
-											usingATM = false;
-											break;
-										default:
-											System.out.println("Must choose between choices 0-8\n");
-											break;
-									}
-								}
-								break;
-
-							// set sys date
-							case "2":
-								System.out.println("Enter the year(yyyy), month(mm), and day(dd) on separate lines");
-								int year = Integer.parseInt(scanner.nextLine());
-								int month = Integer.parseInt(scanner.nextLine());
-								int day = Integer.parseInt(scanner.nextLine());
-								app.setDate(year, month, day);
-								break;
-
-							// exit program
-							case "3":
-								runApp = false;
-								break;
-
-							default:
-								System.out.print("Must choose between choices 0-3\n");
-								break;
-						}
-				}
-			}
+//			Scanner scanner = new Scanner(System.in);
+//			boolean runApp = true;
+//			while(runApp) {
+//
+//				System.out.println("---------HOME PAGE---------\n" +
+//							       "Choose one of the following:\n" +
+//							       "0 Bank Teller\n" +
+//								   "1 Customer ATM\n" +
+//						           "2 Set System Date\n" +
+//								   "3 Exit Program");
+//
+//				String initialChoice = scanner.nextLine();
+//				switch(initialChoice) {
+//
+//					// bank teller
+//					case "0":
+//						boolean bankTelling = true;
+//						while(bankTelling) {
+//							System.out.println("Choose one of the following:\n" +
+//									"0 Enter Check Transaction\n" +
+//									"1 Generate Monthly Statement\n" +
+//									"2 List Closed Accounts\n" +
+//									"3 Generate Government DTER\n" +
+//									"4 Customer Report\n" +
+//									"5 Add interest\n" +
+//									"6 Create Account\n" +
+//									"7 Delete Closed Accounts and Customers\n" +
+//									"8 Delete Transactions\n" +
+//									"9 GO BACK TO HOME PAGE");
+//							String bankTellerChoice = scanner.nextLine();
+//							String accountId = "";
+//							switch (bankTellerChoice) {
+//								// writeCheck
+//								case "0":
+//									System.out.println("To enter a check transaction, enter checking account number and amount on check on separate lines:");
+//									accountId = scanner.nextLine();
+//									double amount = Double.parseDouble(scanner.nextLine());
+//									r = app.writeCheck(accountId, amount);
+//									if (r.equals("1")) {
+//										System.out.println("Check transaction failed");
+//									} else {
+//										System.out.println("Successfully entered transaction");
+//									}
+//									break;
+//								// genMonthlyStatement
+//								case "1":
+//									System.out.println("To generate customer report, enter account id:");
+//									accountId = scanner.nextLine();
+//									app.generateMonthlyStatement(accountId);
+//									break;
+//								// listClosedAccounts
+//								case "2":
+//									System.out.println("Account IDs of closed accounts");
+//									String str[] = app.listClosedAccounts().split(" ");
+//									if (str[0].equals("0")) {
+//										for (int i = 1; i < str.length; i++) {
+//											System.out.println(str[i]);
+//										}
+//									} else {
+//										System.out.println("Listing closed accounts failed");
+//									}
+//									break;
+//								// genGovDTER
+//								case "3":
+//									break;
+//								// genCustomerReport
+//								case "4":
+//									System.out.println("To generate customer report, enter account id:");
+//									accountId = scanner.nextLine();
+//									app.generateCustomerReport(accountId);
+//									break;
+//								// addInterest
+//								case "5":
+//									break;
+//								// createAccount
+//								case "6":
+//									boolean choosingType = true;
+//									System.out.println("Choose account type to create:\n" +
+//											"0 Student Checking\n" +
+//											"1 Interest Checking\n" +
+//											"2 Savings\n" +
+//											"3 Pocket");
+//									String choice = scanner.nextLine();
+//									String id;
+//									String linkedId = "";
+//									double initialTopUp;
+//									double initialBalance;
+//									String tin;
+//									String name = "";
+//									String address = "";
+//									AccountType aType = null;
+//									switch (choice) {
+//										case "0":
+//											aType = AccountType.STUDENT_CHECKING;
+//											break;
+//										case "1":
+//											aType = AccountType.INTEREST_CHECKING;
+//											break;
+//										case "2":
+//											aType = AccountType.SAVINGS;
+//											break;
+//										case "3":
+//											aType = AccountType.POCKET;
+//											break;
+//										default:
+//											break;
+//										break;
+//									}
+//									if (aType != AccountType.POCKET) {
+//										System.out.println("Enter new account ID:");
+//										id = scanner.nextLine();
+//										System.out.println("Enter initial balance:");
+//										initialBalance = Double.parseDouble(scanner.nextLine());
+//										System.out.println("Enter customer taxid:");
+//										tin = scanner.nextLine();
+//										System.out.println("For existing customer, press enter to create account," +
+//												"For new customer, enter name, address on separate lines:");
+//										name = scanner.nextLine();
+//										address = scanner.nextLine();
+//										app.createCheckingSavingsAccount(aType, id, initialBalance, tin, name, address);
+//									} else if (aType.equals(AccountType.POCKET)) {
+//										System.out.println("Enter new pocket account ID:");
+//										id = scanner.nextLine();
+//										System.out.println("Enter checking/savings account ID to link to:");
+//										linkedId = scanner.nextLine();
+//										System.out.println("Enter initial top-up amount:");
+//										initialTopUp = Double.parseDouble(scanner.nextLine());
+//										System.out.println("Enter customer taxid:");
+//										tin = scanner.nextLine();
+//										app.createPocketAccount(id, linkedId, initialTopUp, tin);
+//									}
+//									break;
+//								// delete closed accounts
+//								case "7":
+//									System.out.println("deleting closed accounts...");
+//									r = app.deleteClosedAccounts();
+//									if (r.equals("0")) {
+//										System.out.println("closed accounts deleted.");
+//										break;
+//										// delete transactions
+//										case "8":
+//											break;
+//										// go to home page
+//										case "9":
+//											bankTelling = false;
+//											break;
+//										default:
+//											System.out.println("Must choose between choices 0-9\n");
+//											break;
+//									}
+//							}
+//							break;
+//
+//							// customer atm
+//							case "1":
+//								boolean usingATM = true;
+//								while (usingATM) {
+//									System.out.println("Choose one of the following:\n" +
+//											"0 Deposit\n" +
+//											"1 Top-Up\n" +
+//											"2 Withdrawal\n" +
+//											"3 Purchase\n" +
+//											"4 Transfer\n" +
+//											"5 Collect\n" +
+//											"6 Pay-Friend\n" +
+//											"7 Wire\n" +
+//											"8 LOG OUT AND GO BACK TO HOME PAGE");
+//									String customerChoice = scanner.nextLine();
+//									switch (customerChoice) {
+//										case "0":
+//											break;
+//										case "1":
+//											break;
+//										case "2":
+//											break;
+//										case "3":
+//											break;
+//										case "4":
+//											break;
+//										case "5":
+//											break;
+//										case "6":
+//											break;
+//										case "7":
+//											break;
+//										case "8":
+//											usingATM = false;
+//											break;
+//										default:
+//											System.out.println("Must choose between choices 0-8\n");
+//											break;
+//									}
+//								}
+//								break;
+//
+//							// set sys date
+//							case "2":
+//								System.out.println("Enter the year(yyyy), month(mm), and day(dd) on separate lines");
+//								int year = Integer.parseInt(scanner.nextLine());
+//								int month = Integer.parseInt(scanner.nextLine());
+//								int day = Integer.parseInt(scanner.nextLine());
+//								app.setDate(year, month, day);
+//								break;
+//
+//							// exit program
+//							case "3":
+//								runApp = false;
+//								break;
+//
+//							default:
+//								System.out.print("Must choose between choices 0-3\n");
+//								break;
+//						}
+//				}
+//			}
 
 			// Our tests
+			app.deposit("76543", 60);
+			app.withdrawal("76543", 59.99);
+			app.deleteClosedAccounts();
 
 
 
