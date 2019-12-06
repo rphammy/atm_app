@@ -111,6 +111,10 @@ public class Main
 									break;
 								// addInterest
 								case "5":
+									r = app.addInterest();
+									if(r.equals("0")) {
+										System.out.println("Interest added.");
+									}
 									break;
 								// createAccount
 								case "6":
