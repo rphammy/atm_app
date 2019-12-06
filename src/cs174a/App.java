@@ -5,6 +5,7 @@ import java.sql.DatabaseMetaData;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.Properties;
 import oracle.jdbc.pool.OracleDataSource;
@@ -534,7 +535,7 @@ public class App implements Testable {
 			stmt = _connection.createStatement();
 			rs = stmt.executeQuery(query);
 			while(rs.next()){
-				ids += " ";
+				ids = ids.concat( " ");
 				ids += rs.getString("aid");
 			}
 			return "0" + ids;
@@ -770,7 +771,6 @@ public class App implements Testable {
 		return "0";
 	}
 
-	// NEEDS TESTING
 	/**
 	 * Subtract money from the checking account w aid. Associated with a check
 	 * is a check number.
@@ -812,21 +812,24 @@ public class App implements Testable {
 		return "0";
 	}
 
-	// NEEDS TESTING
 	/**
 	 * Add money to the checking or savings account. The amount added is the
 	 * monthly interest rate times the average daily balance for the month.
 	 * Interest is added at the end of each month.
 	 * @return a string r="0" for success, "1" for error
 	 */
-	//TODO AVERAGE DAILY BALANCE
+	//good
 	public String accrueInterest(String aid) {
+		double avgDailyBalance = averageDailyBalance(aid);
+		double amount;
+		double interest = getInterest(aid)*.01;
 		double balance = Double.parseDouble(getAccountBalance(aid));
-		double interest = getInterest(aid);
-		balance += balance*interest;
-		String update = "UPDATE Accounts" +
+		amount = avgDailyBalance*interest;
+		balance += amount;
+		String update = "UPDATE Accounts " +
 						"SET balance=" + balance +
 						" WHERE aid=" + aid;
+
 		Statement stmt;
 		try {
 			stmt=_connection.createStatement();
@@ -841,11 +844,66 @@ public class App implements Testable {
 	////////////////////////// Additional Bank Teller Functions ////////////////////////////////////////////////////////
 
 	//TODO
-//	public double averageDailyBalance(String aid){
-//
-//	}
+	public double averageDailyBalance(String aid){
+		final String AVERAGE_DAILY_BALANCE =
+				"SELECT T.tdate, T.before\n" +
+				"FROM Transactions T\n" +
+				"WHERE T.aid =" + aid + "\n" +
+				"    AND T.tid = (SELECT MAX(T2.TID) \n" +
+				"                FROM TRANSACTIONS T2 \n" +
+				"                WHERE T2.AID =" + aid + " AND T.tdate = T2.tdate)";
+		Statement stmt;
+		ResultSet rs;
+		double avgDailyBalance=0;
+		Date date;
+		double balance = 0;
+		int day = 0;
+		int counter = 1;
+		int daysPassed = 0;
+		double total = 0;
+		Calendar calendar = Calendar.getInstance();
+		double daysInMonth;
+		double endBalance = Double.parseDouble(getAccountBalance(aid));
+
+		try{
+			stmt = _connection.createStatement();
+			rs = stmt.executeQuery(AVERAGE_DAILY_BALANCE);
+			while(rs.next()){
+				date = rs.getDate("TDATE");
+				calendar.setTime(date);
+				day = calendar.get(Calendar.DAY_OF_MONTH);
+				balance = rs.getDouble("BEFORE");
+				daysPassed = day - counter;
+				total += daysPassed * balance;
+				counter = day;
+
+			}
+			daysInMonth = daysInMonth(calendar.get(Calendar.MONTH));
+			total += ((daysInMonth - day + 1) * endBalance);
+			avgDailyBalance = total/daysInMonth;
+
+			return avgDailyBalance;
+
+		}
+		catch(SQLException e){
+			System.err.print(e.getMessage());
+			return 0;
+		}
+	}
 
 
+	public int daysInMonth(int month) {
+		int days;
+		if(month ==2){
+			days = 28;
+		}
+		else if ((month == 1) || (month== 3) ||(month==5) || (month==7) || (month==8) || (month== 10) || (month== 12)){
+			days = 31;
+		}
+		else
+			days = 30;
+		return days;
+	}
 	/**
 	 * Submit a check transaction for an account
 	 * @return a string r="0" for success, "1" for error
@@ -1010,7 +1068,6 @@ public class App implements Testable {
 		return "1";
 	}
 
-	// NEEDS TESTING
 	/**
 	 * For all open accounts, add the appropriate amount of monthly interest to the balance.
 	 * If interest has already been added for the month, report a warning.
@@ -1028,7 +1085,7 @@ public class App implements Testable {
 		try{
 			stmt = _connection.createStatement();
 			rs=stmt.executeQuery(query);
-			while(!rs.next()) {
+			while(rs.next()) {
 				aid = rs.getInt("aid");
 				accrueInterest(Integer.toString(aid));
 			}
@@ -1039,14 +1096,14 @@ public class App implements Testable {
 		return "0";
 	}
 
-	// NEEDS TESTING
 	/**
 	 * delete closed accounts and remove all customers who do not own any accounts
 	 * @return a string r="0" for success, "1" for error/warning
 	 */
+	//good
 	public String deleteClosedAccounts(){
 		// delete closed accounts
-		String deletion = "DELETE FROM Accounts WHERE A.status='closed'";
+		String deletion = "DELETE FROM Accounts WHERE status='closed'";
 		Statement stmt;
 		try{
 			stmt=_connection.createStatement();
@@ -1061,9 +1118,11 @@ public class App implements Testable {
 		try{
 			stmt=_connection.createStatement();
 			rs=stmt.executeQuery(query);
-			while(!rs.next()) {
+			while(rs.next()) {
 				deletion = "DELETE FROM Customers C WHERE C.taxid="+Integer.toString(rs.getInt("taxid"));
-				stmt.executeUpdate(deletion);
+				Statement stmt2;
+				stmt2= _connection.createStatement();
+				stmt2.executeUpdate(deletion);
 			}
 		}catch(SQLException e){
 			System.err.print(e.getMessage());
@@ -1078,6 +1137,7 @@ public class App implements Testable {
 	 * a new month of processing.
 	 * @return a string r="0" for success, "1" for error/warning
 	 */
+	//good
 	public String deleteTransactions() {
 		String update = "DELETE FROM Transactions";
 		Statement stmt;
