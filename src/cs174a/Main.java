@@ -39,29 +39,27 @@ public class Main
 			app.populateOwnersData();
 			app.populatePocketData();
 
-			app.editAccountBalance("93156", 30);
-			System.out.println(r);
+//			app.editAccountBalance("17431", 30);
+//			System.out.println(r);
+//
+//
+//			r = app.createPocketAccount("11111", "17431", 10, "361721022");
+//			System.out.println(r);
+//
+//			r = app.getAccountBalance("17431");
+//			System.out.println("17431: " + r);
+//
+//			r = app.getAccountBalance("11111");
+//			System.out.println("11111: " + r);
 
-			app.editAccountBalance("32156", 30);
-			System.out.println(r);
-
-			app.currentCustomerTid = "12";
-			r = app.transfer("93156", "32156", 10, true);
-			System.out.println(r);
-
-			r = app.getAccountBalance("93156");
-			System.out.println("93156: " + r);
-
-			r = app.getAccountBalance("32156");
-			System.out.println("32156: " + r);
 
 
 //
 
 
 
-//			r = app.createTransaction("INTEREST_CHECKING", 10, "17431", "-1");
-//			System.out.println(r);
+			r = app.createTransaction("INTEREST_CHECKING", 10, "17431", "-1");
+			System.out.println(r);
 
 
 
