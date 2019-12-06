@@ -40,6 +40,65 @@ public class App implements Testable {
 		bankName="bank of Nuts";
 	}
 
+	//////////////////////////////////////// App Functions /////////////////////////////////////////////////////////////
+	public boolean verifyPin(int pin) {
+		String query = "SELECT C.pinKey FROM Customers C WHERE C.pinKey="+hashPin(pin);
+		Statement stmt;
+		ResultSet rs;
+		int pinKey = 0;
+		try {
+			stmt=_connection.createStatement();
+			rs=stmt.executeQuery(query);
+			while(rs.next()) {
+				pinKey = rs.getInt("pinKey");
+			}
+			if(pinKey==hashPin(pin)) {
+				setCurrentCustomerTid(pin);
+				return true;
+			}
+		} catch(SQLException e) {
+			System.err.print(e.getMessage());
+			return false;
+		}
+		return false;
+	}
+
+	public void setPin(int oldPin, int newPin) {
+		String query = "SELECT C.pinKey FROM Customers C WHERE C.oldPin";
+		if(!verifyPin(oldPin)) {
+			System.out.println("Invalid pin, please try again.");
+		} else {
+			String update = "UPDATE Customers C SET C.pinKey="+hashPin(newPin)+" WHERE C.taxId="+currentCustomerTid;
+			Statement stmt;
+			try{
+				stmt=_connection.createStatement();
+				stmt.executeUpdate(update);
+			}catch(SQLException e) {
+				System.err.print(e.getMessage());
+			}
+		}
+	}
+
+	public int hashPin(int pin) {
+		int hash = (pin%679)+91;
+		return hash;
+	}
+
+	private void setCurrentCustomerTid(int pin){
+		String query = "SELECT C.taxId FROM Customers C WHERE C.pinKey="+hashPin(pin);
+		Statement stmt;
+		ResultSet rs;
+		String taxId;
+		try{
+			stmt=_connection.createStatement();
+			rs=stmt.executeQuery(query);
+			while(rs.next()) {
+				taxId = rs.getString("taxId");
+			}
+		}catch(SQLException e) {
+			System.err.print(e.getMessage());
+		}
+	}
 	////////////////////////////// Implement all of the methods given in the interface /////////////////////////////////
 	// Check the Testable.java interface for the function signatures and descriptions.
 
@@ -108,7 +167,7 @@ public class App implements Testable {
 				"CREATE TABLE Customers ("
 						+"cname CHAR(100),"
 						+ "address CHAR(200),"
-						+ "pinKey CHAR(4),"
+						+ "pinKey INT,"
 						+ "taxid INT NOT NULL,"
 						+ "PRIMARY KEY (taxid))";
 
@@ -1337,52 +1396,52 @@ public class App implements Testable {
 
 	public void populateCustomerData(){
 		String alfred = "INSERT INTO Customers (taxid, cname, address, pinkey) \n" +
-				"VALUES (361721022, 'Alfred Hitchcock', '6667 El Colegio #40', '1234')";
+				"VALUES (361721022, 'Alfred Hitchcock', '6667 El Colegio #40',"+hashPin(1234)+")";
 
 		String billy = "INSERT INTO Customers (taxid, cname, address, pinkey) \n" +
-				"VALUES (231403227, 'Billy Clinton','5777 Hollister' ,'1468')";
+				"VALUES (231403227, 'Billy Clinton','5777 Hollister' ,"+hashPin(1468)+")";
 
 		String cindy = "INSERT INTO Customers (taxid, cname, address, pinkey) \n" +
-				"VALUES (412231856, 'Cindy Laugher', '7000 Hollister', '3764')";
+				"VALUES (412231856, 'Cindy Laugher', '7000 Hollister',"+hashPin(3764)+")";
 
 		String david = "INSERT INTO Customers (taxid, cname, address, pinkey) \n" +
-				"VALUES (207843218, 'David Copperfill','1357 State St', '8582')";
+				"VALUES (207843218, 'David Copperfill','1357 State St',"+hashPin(8582)+")";
 
 		String elizabeth = "INSERT INTO Customers (taxid, cname, address, pinkey) \n" +
-				"VALUES (122219876, 'Elizabeth Sailor', '4321 State St', '3856')";
+				"VALUES (122219876, 'Elizabeth Sailor', '4321 State St',"+hashPin(3856)+")";
 
 		String fatal = "INSERT INTO Customers (taxid, cname, address, pinkey) \n" +
-				"VALUES (401605312, 'Fatal Castro','3756 La Cumbre Plaza' ,'8193')";
+				"VALUES (401605312, 'Fatal Castro','3756 La Cumbre Plaza',"+hashPin(8193)+")";
 
 		String george = "INSERT INTO Customers (taxid, cname, address, pinkey) \n" +
-				"VALUES (201674933, 'George Brush', '5346 Foothill Av', '9824')";
+				"VALUES (201674933, 'George Brush', '5346 Foothill Av',"+hashPin(9824)+")";
 
 		String hurryson = "INSERT INTO Customers (taxid, cname, address, pinkey) \n" +
-				"VALUES (212431965, 'Hurryson Ford', '678 State St', '3532')";
+				"VALUES (212431965, 'Hurryson Ford', '678 State St',"+hashPin(3532)+")";
 
 		String ivan = "INSERT INTO Customers (taxid, cname, address, pinkey) \n" +
-				"VALUES (322175130, 'Ivan Lendme','1235 Johnson Dr', '8471')";
+				"VALUES (322175130, 'Ivan Lendme','1235 Johnson Dr',"+hashPin(8471)+")";
 
 		String joe = "INSERT INTO Customers (taxid, cname, address, pinkey) \n" +
-				"VALUES (344151573, 'Joe Pepsi','3210 State St' ,'3692')";
+				"VALUES (344151573, 'Joe Pepsi','3210 State St',"+hashPin(3692)+")";
 
 		String kelvin = "INSERT INTO Customers (taxid, cname, address, pinkey) \n" +
-				"VALUES (209378521, 'Kelvin Costner','Santa Cruz #3579', '4659')";
+				"VALUES (209378521, 'Kelvin Costner','Santa Cruz #3579',"+hashPin(4659)+")";
 
 		String li = "INSERT INTO Customers (taxid, cname, address, pinkey) \n" +
-				"VALUES (212116070, 'Li Kung', '2 People''s Rd Beijing', '9173')";
+				"VALUES (212116070, 'Li Kung', '2 People''s Rd Beijing',"+hashPin(9173)+")";
 
 		String magic = "INSERT INTO Customers (taxid, cname, address, pinkey) \n" +
-				"VALUES (188212217, 'Magic Jordon','3852 Court Rd', '7351')";
+				"VALUES (188212217, 'Magic Jordon','3852 Court Rd',"+hashPin(7351)+")";
 
 		String nam = "INSERT INTO Customers (taxid, cname, address, pinkey) \n" +
-				"VALUES (203491209, 'Nam-Hoi Chung', '1997 People''s St HK', '5340')";
+				"VALUES (203491209, 'Nam-Hoi Chung', '1997 People''s St HK',"+hashPin(5340)+")";
 
 		String olive = "INSERT INTO Customers (taxid, cname, address, pinkey) \n" +
-				"VALUES (210389768, 'Olive Stoner', '6689 El Colegio #151', '8452')";
+				"VALUES (210389768, 'Olive Stoner', '6689 El Colegio #151',"+hashPin(8452)+")";
 
 		String pit = "INSERT INTO Customers (taxid, cname, address, pinkey) \n" +
-				"VALUES (400651982, 'Pit Wilson', '911 State St' ,'1821')";
+				"VALUES (400651982, 'Pit Wilson', '911 State St' ,"+hashPin(1821)+")";
 		Statement stmt;
 		try{
 			stmt = _connection.createStatement();

@@ -66,6 +66,7 @@ public class Main
 									"9 GO BACK TO HOME PAGE");
 							String bankTellerChoice = scanner.nextLine();
 							String accountId = "";
+							String taxId = "";
 							switch (bankTellerChoice) {
 								// writeCheck
 								case "0":
@@ -82,9 +83,9 @@ public class Main
 									break;
 								// genMonthlyStatement
 								case "1":
-									System.out.println("To generate customer report, enter account id:");
-									accountId = scanner.nextLine();
-									app.generateMonthlyStatement(accountId);
+									System.out.println("To generate monthly report, enter customer tax id:");
+									taxId = scanner.nextLine();
+									app.generateMonthlyStatement(taxId);
 									break;
 								// listClosedAccounts
 								case "2":
@@ -100,12 +101,13 @@ public class Main
 									break;
 								// genGovDTER
 								case "3":
+									System.out.println("Not implemented yet :(");
 									break;
 								// genCustomerReport
 								case "4":
-									System.out.println("To generate customer report, enter account id:");
-									accountId = scanner.nextLine();
-									app.generateCustomerReport(accountId);
+									System.out.println("To generate customer report, enter tax id:");
+									taxId = scanner.nextLine();
+									app.generateCustomerReport(taxId);
 									break;
 								// addInterest
 								case "5":
@@ -198,53 +200,138 @@ public class Main
 					// customer atm
 					case "1":
 						boolean usingATM = true;
+						boolean loggedIn = false;
+						int logInPIN = 0;
 						while (usingATM) {
-							System.out.println("Choose one of the following:\n" +
-									"0 Deposit\n" +
-									"1 Top-Up\n" +
-									"2 Withdrawal\n" +
-									"3 Purchase\n" +
-									"4 Transfer\n" +
-									"5 Collect\n" +
-									"6 Pay-Friend\n" +
-									"7 Wire\n" +
-									"8 LOG OUT AND GO BACK TO HOME PAGE");
-							String customerChoice = scanner.nextLine();
-							switch (customerChoice) {
-								case "0":
-									break;
-								case "1":
-									break;
-								case "2":
-									break;
-								case "3":
-									break;
-								case "4":
-									break;
-								case "5":
-									break;
-								case "6":
-									break;
-								case "7":
-									break;
-								case "8":
+							if(!loggedIn) {
+								System.out.println("Enter your PIN to continue:");
+								logInPIN = Integer.parseInt(scanner.nextLine());
+								if(app.verifyPin(logInPIN)) {
+									loggedIn=true;
+								} else {
+									System.out.println("Incorrect PIN");
 									usingATM = false;
-									break;
-								default:
-									System.out.println("Must choose between choices 0-8\n");
-									break;
+								}
+							}
+							if(loggedIn) {
+								System.out.println("Choose one of the following:\n" +
+										"0 Deposit\n" +
+										"1 Top-Up\n" +
+										"2 Withdrawal\n" +
+										"3 Purchase\n" +
+										"4 Transfer\n" +
+										"5 Collect\n" +
+										"6 Pay-Friend\n" +
+										"7 Wire\n" +
+										"8 Set Pin\n" +
+										"9 LOG OUT AND GO BACK TO HOME PAGE");
+								String customerChoice = scanner.nextLine();
+								String accountId = "";
+								String accountId2 = "";
+								double amount = 0.0;
+								switch (customerChoice) {
+									// deposit
+									case "0":
+										System.out.println("Enter account id for deposit:");
+										accountId = scanner.nextLine();
+										System.out.println("Enter amount to deposit:");
+										amount = Double.parseDouble(scanner.nextLine());
+										app.deposit(accountId, amount);
+										break;
+									// top-up
+									case "1":
+										System.out.println("Enter account id for top-up:");
+										accountId = scanner.nextLine();
+										System.out.println("Enter amount to top-up:");
+										amount = Double.parseDouble(scanner.nextLine());
+										app.topUp(accountId, amount);
+										break;
+									// withdrawal
+									case "2":
+										System.out.println("Enter account id for withdrawal:");
+										accountId = scanner.nextLine();
+										System.out.println("Enter amount to withdraw:");
+										amount = Double.parseDouble(scanner.nextLine());
+										app.withdrawal(accountId, amount);
+										break;
+									// purchase
+									case "3":
+										System.out.println("Enter account id for purchase:");
+										accountId = scanner.nextLine();
+										System.out.println("Enter purchase amount:");
+										amount = Double.parseDouble(scanner.nextLine());
+										app.topUp(accountId, amount);
+										break;
+									// transfer
+									case "4":
+										System.out.println("Enter account id to transfer from:");
+										accountId = scanner.nextLine();
+										System.out.println("Enter account id to transfer to:");
+										accountId2 = scanner.nextLine();
+										System.out.println("Enter amount to transfer:");
+										amount = Double.parseDouble(scanner.nextLine());
+										app.transfer(accountId, accountId2, amount, true);
+										break;
+									// collect
+									case "5":
+										System.out.println("Enter account id to collect from:");
+										accountId = scanner.nextLine();
+										System.out.println("Enter account id to transfer collected funds to:");
+										accountId2 = scanner.nextLine();
+										System.out.println("Enter amount to collect:");
+										amount = Double.parseDouble(scanner.nextLine());
+										app.collect(accountId, accountId2, amount);
+										break;
+									// pay-friend
+									case "6":
+										System.out.println("Enter account id to pay from:");
+										accountId = scanner.nextLine();
+										System.out.println("Enter account id to pay:");
+										accountId2 = scanner.nextLine();
+										System.out.println("Enter amount to pay:");
+										amount = Double.parseDouble(scanner.nextLine());
+										app.payFriend(accountId, accountId2, amount);
+										break;
+									// wire
+									case "7":
+										System.out.println("Enter account id to wire from:");
+										accountId = scanner.nextLine();
+										System.out.println("Enter account id to wire:");
+										accountId2 = scanner.nextLine();
+										System.out.println("Enter amount to wire:");
+										amount = Double.parseDouble(scanner.nextLine());
+										app.wire(accountId, accountId2, amount);
+										break;
+									// set PIN
+									case "8":
+										int oldPin;
+										int newPin;
+										System.out.println("Enter old pin: ");
+										oldPin = Integer.parseInt(scanner.nextLine());
+										System.out.println("Enter new pin: ");
+										newPin = Integer.parseInt(scanner.nextLine());
+										app.setPin(oldPin, newPin);
+										// go to home page
+									case "9":
+										usingATM = false;
+										loggedIn = false;
+										break;
+									default:
+										System.out.println("Must choose between choices 0-9\n");
+										break;
+								}
 							}
 						}
 						break;
 
-							// set sys date
-							case "2":
-								System.out.println("Enter the year(yyyy), month(mm), and day(dd) on separate lines");
-								int year = Integer.parseInt(scanner.nextLine());
-								int month = Integer.parseInt(scanner.nextLine());
-								int day = Integer.parseInt(scanner.nextLine());
-								app.setDate(year, month, day);
-								break;
+					// set sys date
+					case "2":
+						System.out.println("Enter the year(yyyy), month(mm), and day(dd) on separate lines");
+						int year = Integer.parseInt(scanner.nextLine());
+						int month = Integer.parseInt(scanner.nextLine());
+						int day = Integer.parseInt(scanner.nextLine());
+						app.setDate(year, month, day);
+						break;
 
 					// exit program
 					case "3":
