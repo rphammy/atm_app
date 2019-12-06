@@ -25,6 +25,7 @@ public class App implements Testable {
 	private String bankName;
 	private int transactionId;
 	private boolean addedInterest;
+	private String currentCustomerTid;
 
 	/**
 	 * Default constructor.
@@ -475,7 +476,11 @@ public class App implements Testable {
 				amount = amount-5.0;
 			}
 			// edit account balances
-			editAccountBalance(from, amount*-1);
+			String r = editAccountBalance(from, amount*-1);
+			if(r=="1") {
+				System.out.print("Error: insufficient funds in account.");
+				return "1";
+			}
 			editAccountBalance(to, amount);
 			fromNewBalance = getAccountBalance(from);
 			toNewBalance = getAccountBalance(to);
@@ -525,7 +530,11 @@ public class App implements Testable {
 		if(getAccountType(aid)=="POCKET" || getAccountType(aid)=="1") {
 			return "1";
 		}
-		editAccountBalance(aid, amount*-1);
+		String r = editAccountBalance(aid, amount*-1);
+		if(r=="1") {
+			System.out.print("Error: insufficient funds in account.");
+			return "1";
+		}
 		createTransaction("withdrawal",amount*-1,aid,"-1");
 		return "0";
 	}
@@ -553,6 +562,40 @@ public class App implements Testable {
 	 * @return a string r="0" for success, "1" for error
 	 */
 	public String transfer(String aid, String aid2, double amount) {
+		// amount must be less than $2000
+		if(amount>2000) {
+			System.out.print("Error: cannot transfer more than $2000 in one transaction.");
+			return "1";
+		}
+		// both accounts must be checking/savings accounts
+		if(getAccountType(aid)=="POCKET" || getAccountType(aid2)=="POCKET") {
+			System.out.print("Error: cannot perform a transfer with a pocket account.");
+			return "1";
+		}
+		// check that accounts have at least one owner in common
+		String query = "SELECT DISTINCT O.taxid " +
+				       "FROM Owners O, Owners O2 " +
+				       "WHERE O.aid=" + aid +
+				 	   " AND O2.aid2=" + aid2 +
+				       " AND O.taxid=O2.taxid" +
+					   " AND O.taxid=" + currentCustomerTid;
+		Statement stmt;
+		ResultSet rs;
+		try {
+			stmt=_connection.createStatement();
+			rs = stmt.executeQuery(query);
+			if(!rs.next()) {
+				System.out.print("Error: must be owner of both accounts to perform a transfer.");
+				return "1";
+			}
+		} catch(SQLException e) {
+			System.err.print(e.getMessage());
+			return "1";
+		}
+		// perform transfer
+		createTransaction("transfer",amount,aid,aid2);
+		editAccountBalance(aid, amount*-1);
+		editAccountBalance(aid2, amount);
 		return "0";
 	}
 
@@ -565,6 +608,7 @@ public class App implements Testable {
 	 * @return a string r="0" for success, "1" for error
 	 */
 	public String collect(String aid, String aid2, double amount) {
+
 		return "0";
 	}
 
