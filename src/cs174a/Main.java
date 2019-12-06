@@ -28,25 +28,22 @@ public class Main
 		{
 			// Our tests
 
-//            r = app.dropTables();
-//			System.out.println(r);
-//
-//            r = app.createTables();
-//			System.out.println(r);
-//
-//			app.populateCustomerData();
-//			app.populateAccountData();
-//			app.populateOwnersData();
-//			app.populatePocketData();
-//
-//			r = app.deposit("17431", 10);
-//			System.out.println(r);
-//
-//			r = app.deposit("17431", 10);
-//			System.out.println(r);
-
-			r = app.createCheckingSavingsAccount(AccountType.INTEREST_CHECKING, "11111", 20.0, "361721022", "Alfred Hitchcock", "6667 El Colegio #40");
+            r = app.dropTables();
 			System.out.println(r);
+
+            r = app.createTables();
+			System.out.println(r);
+
+			app.populateCustomerData();
+			app.populateAccountData();
+			app.populateOwnersData();
+			app.populatePocketData();
+
+			app.editAccountBalance("12121", 30);
+			r = app.topUp("53027", 10);
+			System.out.println(r);
+//
+
 
 
 //			r = app.createTransaction("INTEREST_CHECKING", 10, "17431", "-1");

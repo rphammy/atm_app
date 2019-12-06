@@ -199,7 +199,7 @@ public class App implements Testable {
 				+ tin + ","
 				+ "'" + name + "'" + ","
 				+ "'" + address + "'" + ","
-				+ "NULL)";
+				+ "1717)";
 
 		try{
 			//insert customer data
@@ -213,6 +213,21 @@ public class App implements Testable {
 		}
 	}
 
+	//good
+	public String createOwner(String id, String tin) {
+		final String INSERT_OWNERS = "INSERT INTO Owners(aid, taxid)\n" +
+				"VALUES(" + id + "," +  tin + ")";
+		try {
+			Statement stmt = _connection.createStatement();
+			stmt.executeUpdate(INSERT_OWNERS);
+			return "0";
+		}
+		catch(SQLException er) {
+			System.err.println(er.getMessage());
+			return "1";
+		}
+
+	}
 	/**
 	 * Set system's date.
 	 *
@@ -246,84 +261,45 @@ public class App implements Testable {
 	 */
 	@Override
 	public String topUp( String accountId, double amount ) {
-		Statement stmt = null;
+		Statement stmt;
 		final String LINKED_ACCOUNT_QUERY =
 				"SELECT aid2 "
 				+ "FROM Pocket "
 				+ " WHERE aid=" + accountId;
 
-		final String LINKED_BALANCE_QUERY =
-				"SELECT A.balance\n" +
-				"FROM accounts A\n" +
-				"WHERE A.aid = \n" +
-				"    (SELECT P.aid2\n" +
-				"    FROM pocket P\n" +
-				"    WHERE P.aid =" + accountId +
-				")\n";
-
-		final String POCKET_BALANCE_QUERY =
-				"SELECT A.balance\n" +
-						"FROM Accounts A\n" +
-						"WHERE A.aid = " + accountId;
- 
-		final String LINKED_BALANCE_UPDATE;
-		final String POCKED_BALANCE_UPDATE;
-
-		double pocketBalance = 0;
-		double linkedBalance = 0;
 		double newPocketBalance = 0;
 		double newLinkedBalance = 0;
-
-
-
+		String linkedId = "";
 
 		try {
 			//query for the corresponding linked account using pocket account in pocket table
 			stmt = _connection.createStatement();
-			int test = 0;
-			ResultSet r = stmt.executeQuery(LINKED_ACCOUNT_QUERY);
-			if(r.next() == false) {
-				System.out.print("sorry :(");
-			}
-			while(r.next()) {
-				System.out.println("hi");
-				test = r.getInt(1);
-				System.out.println("id: " + test);
-			}
 
-			ResultSet rs = stmt.executeQuery(POCKET_BALANCE_QUERY);
-			System.out.println(POCKET_BALANCE_QUERY);
+			//get linked aid
+			ResultSet rs = stmt.executeQuery(LINKED_ACCOUNT_QUERY);
 			while(rs.next()) {
-				pocketBalance = rs.getDouble("balance");
-				System.out.println("pocket balance: " + pocketBalance);
+				linkedId = Integer.toString(rs.getInt("aid2"));
 			}
 
-			rs = stmt.executeQuery(LINKED_BALANCE_QUERY);
-			while(rs.next()) {
-				linkedBalance = rs.getDouble("balance");
-				System.out.print("linked balance: " + linkedBalance);
+			//update balances
+			String r = editAccountBalance(accountId, amount);
+			if(r.equals("1")){
+				System.out.println("Cannot edit balance");
+				return "1 " +  newLinkedBalance + " " +  newPocketBalance;
 			}
-
-
-			newPocketBalance = pocketBalance + amount;
-			newLinkedBalance = linkedBalance - amount;
-
-
+			String s = editAccountBalance(linkedId, amount*-1);
+			if(s.equals("1")){
+				System.out.println("Cannot edit balance");
+				return "1 " +  newLinkedBalance + " " +  newPocketBalance;
+			}
 			//then update the corresponding balance for that checking/savings row in accounts table
-			String UPDATE_LINKED = "UPDATE Accounts " +
-					"SET balance = " + newLinkedBalance +
-					" WHERE aid = ";
-			String UPDATE_POCKET = "UPDATE Accounts " +
-					"SET balance = " + newLinkedBalance +
-					" WHERE aid = ";
-//			rs = stmt.executeUpdate();
-//			rs = stmt.executeUpdate(");
 
-
-			return "0 " + pocketBalance + linkedBalance;
+			newPocketBalance = Double.parseDouble(getAccountBalance(accountId));
+			newLinkedBalance = Double.parseDouble(getAccountBalance(linkedId));
+			return "0 " + newLinkedBalance + " " +  newPocketBalance;
 		} catch (SQLException e) {
-			return "1" + e;
-
+			System.out.println(e);
+			return "1 " +  newLinkedBalance + " " +  newPocketBalance;
 		}
 	}
 
@@ -344,6 +320,7 @@ public class App implements Testable {
 	 * balance is the account's initial balance with 2 decimal places (e.g. 1000.34, as with %.2f); and
 	 * tin is the Tax ID of account's primary owner.
 	 */
+	//good
 	@Override
 	public String createCheckingSavingsAccount(AccountType accountType, String id, double initialBalance, String tin, String name, String address) {
 		// check if customer exists
@@ -375,6 +352,12 @@ public class App implements Testable {
 			stmt.executeUpdate(createAccountQuery);
 		}catch(SQLException e){
 			System.err.print(e.getMessage());
+			return "1 " + id + " " + accountType + " " + initialBalance + " " + tin;
+		}
+
+		//createOwners entry
+		String r = createOwner(id, tin);
+		if(r.equals("1")){
 			return "1 " + id + " " + accountType + " " + initialBalance + " " + tin;
 		}
 		return "0"+ id + " " + accountType + " " + initialBalance + " " + tin;
@@ -422,7 +405,7 @@ public class App implements Testable {
 		String newBalance = oldBalance;
 		String r = editAccountBalance(accountId, amount);
 
-		if(r == "1")
+		if(r.equals("1"))
 			return "1 " + oldBalance + " " + newBalance;
 
 		createTransaction("deposit", amount, accountId,"-1");
@@ -442,7 +425,7 @@ public class App implements Testable {
 	@Override
 	public String showBalance( String accountId ) {
 		String balance = getAccountBalance(accountId);
-		if(balance=="1") {
+		if(balance.equals("1")) {
 			return "1";
 		} else {
 			return "0 "+balance;
@@ -469,6 +452,7 @@ public class App implements Testable {
 		String toNewBalance=getAccountBalance(to);
 		Statement stmt;
 		ResultSet rs;
+		double feeAmount = amount;
 		try{
 			// check that both accounts are pocket accounts
 			stmt=_connection.createStatement();
@@ -485,19 +469,22 @@ public class App implements Testable {
 			// the first transaction of the month incurs a $5 fee
 			rs = stmt.executeQuery(firstTransaction);
 			if(!rs.next()) {
-				amount = amount-5.0;
+				feeAmount = amount-5.0;
 			}
 			// edit account balances
-			String r = editAccountBalance(from, amount*-1);
-			if(r=="1") {
+			String r = editAccountBalance(from, feeAmount*-1);
+			if(r.equals("1")) {
 				System.out.print("Error: insufficient funds in account.");
-				return "1";
+				return "1 "+fromNewBalance+" "+toNewBalance;
 			}
-			editAccountBalance(to, amount);
+			editAccountBalance(to, feeAmount);
+
 			fromNewBalance = getAccountBalance(from);
 			toNewBalance = getAccountBalance(to);
+
 			// create Transaction
 			createTransaction("pay-friend", amount, from, to);
+
 		}catch(SQLException e) {
 			System.err.print(e.getMessage());
 			return "1 "+fromNewBalance+" "+toNewBalance;
@@ -540,11 +527,11 @@ public class App implements Testable {
 	 * @return a string r = "0" for success, "1" for error
 	 */
 	public String withdrawal(String aid, double amount) {
-		if(getAccountType(aid)=="POCKET" || getAccountType(aid)=="1") {
+		if(getAccountType(aid).equals("POCKET") || getAccountType(aid).equals("1")) {
 			return "1";
 		}
 		String r = editAccountBalance(aid, amount*-1);
-		if(r=="1") {
+		if(r.equals("1")) {
 			System.out.print("Error: insufficient funds in account.");
 			return "1";
 		}
@@ -1116,6 +1103,8 @@ public class App implements Testable {
 		}
 	}
 
+	//aid is the pocket
+	//aid2 is the linked account
 	public void populatePocketData() {
 		final String a = "INSERT INTO Pocket(aid, aid2) \n" +
 				"VALUES(53027, 12121)";
