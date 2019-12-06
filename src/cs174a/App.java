@@ -847,7 +847,7 @@ public class App implements Testable {
 				totalFunds+=Integer.parseInt(getAccountBalance(rs.getString("aid")));
 			}
 			if(totalFunds>100000){
-				System.out.println("WARNING: You have reached the limit of insurance")
+				System.out.println("WARNING: You have reached the limit of insurance");
 			}
 		}catch(SQLException e){
 			System.out.print(e.getMessage());
@@ -856,13 +856,24 @@ public class App implements Testable {
 		return "0";
 	}
 
-	// not implemented
+	// NEEDS TESTING
 	/**
 	 * Generate a list of all customers which have a sum of deposits, transfers, and wires
 	 * during the current month, over all owned accounts (active or closed) of over $10,000.
 	 * @return a string r="0" for success, "1" for error
 	 */
 	public String generateDTER() {
+		String query ="";
+		// SELECT C.taxid
+		Statement stmt;
+		ResultSet rs;
+		try{
+			stmt=_connection.createStatement();
+			rs = stmt.executeQuery(query);
+		}catch(SQLException e){
+			System.err.print(e.getMessage());
+			return "1";
+		}
 		return "0";
 	}
 
